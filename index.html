@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="apple-mobile-web-app-title" content="Terugkoppeling">
+<meta name="theme-color" content="#00706b">
+<link rel="icon" href="icoon.png">
+<link rel="apple-touch-icon" href="icoon.png">
+<title>Terugkoppeling</title>
+<style>
+  :root { --groen:#00706b; --tekst:#1d1d1d; --zacht:#5f6b6b; --rand:#d5dede; --bg:#f4f8f8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system, "Segoe UI", Roboto, Arial, sans-serif; background:var(--bg); color:var(--tekst); font-size:18px; }
+  header { background:var(--groen); color:#fff; padding:18px 16px; }
+  header h1 { margin:0; font-size:22px; }
+  header p { margin:4px 0 0; font-size:15px; opacity:.9; }
+  main { padding:16px; max-width:520px; margin:0 auto; }
+  .knop { display:block; width:100%; text-align:left; background:#fff; border:1px solid var(--rand); border-radius:12px; padding:18px 16px; margin:0 0 12px; font-size:19px; color:var(--tekst); text-decoration:none; cursor:pointer; }
+  .knop small { display:block; color:var(--zacht); font-size:14px; margin-top:2px; }
+  .knop:active { background:#e6f1f0; }
+  .hoofd { background:var(--groen); color:#fff; border:none; text-align:center; font-weight:600; }
+  input { width:100%; font-size:20px; padding:14px; border:1px solid var(--rand); border-radius:12px; margin:8px 0 12px; }
+  .fout { color:#b00020; min-height:1.4em; font-size:16px; }
+  .uitleg { color:var(--zacht); font-size:15px; line-height:1.45; }
+  .verborgen { display:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Terugkoppeling</h1>
+  <p id="wie">Thuisadministratie Humanitas Tynaarlo</p>
+</header>
+<main>
+  <section id="slot" class="verborgen">
+    <p>Vul het wachtwoord in. Je krijgt het van Willem.</p>
+    <input id="ww" type="password" autocomplete="off" inputmode="text" aria-label="Wachtwoord">
+    <button class="knop hoofd" id="open">Openen</button>
+    <p class="fout" id="fout"></p>
+  </section>
+  <section id="lijst" class="verborgen">
+    <p>Over wie wil je iets doorgeven?</p>
+    <div id="deelnemers"></div>
+    <p class="uitleg">Is er echt iets aan de hand? Mail of bel Willem: 06 17187589.</p>
+  </section>
+  <section id="leeg" class="verborgen">
+    <p>Deze app kent je deelnemers nog niet.</p>
+    <p class="uitleg">Open de app-link uit de mail van Willem, dan staan je deelnemers erin.</p>
+  </section>
+</main>
+<script>
+// Wachtwoord van dit kwartaal: alleen de SHA-256 van (zout + wachtwoord) staat hier.
+const PERIODE = "2026-K4";
+const ZOUT = "humanitas-tynaarlo-tk";
+const WW_HASH = "c2e9c5e643651b6bd0bcf18b3a630ae9f9f7f0adf4939eccf559cce5c8a47cb9";
+const FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT_kjkON_ReWy6tcrBlZnAibi_dHjyEahgqTJAlUQURCMU9NSUxZWERaS1pEMjBGUE83TUNROC4u";
+const VRAAG_VW = "r250150172a6b454fae636bc9e1d45795";
+const VRAAG_DN = "r7d4b6d8d128d4a86a00713abaf3233a6";
+
+const $ = id => document.getElementById(id);
+function lees(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function schrijf(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+// Gegevens staan na het #-teken in de link: die worden nooit naar de server gestuurd.
+function gegevens() {
+  const h = location.hash.slice(1);
+  if (h) {
+    try {
+      const t = decodeURIComponent(escape(atob(h.replace(/-/g, "+").replace(/_/g, "/"))));
+      const g = JSON.parse(t);
+      if (g && g.v && Array.isArray(g.d)) { schrijf("tk_gegevens", t); return g; }
+    } catch (e) {}
+  }
+  try { return JSON.parse(lees("tk_gegevens")); } catch (e) { return null; }
+}
+
+async function sha(s) {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join("");
+}
+
+function toon(id) { ["slot", "lijst", "leeg"].forEach(s => $(s).classList.toggle("verborgen", s !== id)); }
+
+function lijst(g) {
+  $("wie").textContent = g.v;
+  const box = $("deelnemers"); box.innerHTML = "";
+  g.d.forEach(dn => {
+    const a = document.createElement("a");
+    const p = dn.split(" - Ref ");
+    a.className = "knop";
+    a.href = FORM + "&" + VRAAG_VW + "=" + encodeURIComponent(g.v) + "&" + VRAAG_DN + "=" + encodeURIComponent(dn);
+    a.innerHTML = "";
+    a.append(p[0]);
+    if (p[1]) { const s = document.createElement("small"); s.textContent = p[1]; a.append(s); }
+    box.append(a);
+  });
+  toon("lijst");
+}
+
+async function start() {
+  const g = gegevens();
+  if (!g) { toon("leeg"); return; }
+  if (lees("tk_slot") === PERIODE + ":" + WW_HASH) { lijst(g); return; }
+  toon("slot");
+  const probeer = async () => {
+    const h = await sha(ZOUT + $("ww").value.trim().toLowerCase());
+    if (h === WW_HASH) { schrijf("tk_slot", PERIODE + ":" + WW_HASH); $("ww").value = ""; lijst(g); }
+    else { $("fout").textContent = "Dit wachtwoord klopt niet."; }
+  };
+  $("open").onclick = probeer;
+  $("ww").onkeydown = e => { if (e.key === "Enter") probeer(); };
+}
+start();
+</script>
+</body>
+</html>

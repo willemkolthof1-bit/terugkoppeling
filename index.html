@@ -142,10 +142,9 @@
         <audio id="opSpeler" controls></audio>
         <div class="rij" style="margin-bottom:12px"><button class="knop hoofd" id="opDeel" type="button">Stuur het bestand naar de co&ouml;rdinator</button><button class="knop" id="opBewaar" type="button">Opslaan als bestand</button></div>
         <div id="opmelding"></div>
-        <button class="knop" id="opKopieer" type="button">Mailadres van de co&ouml;rdinator kopi&euml;ren<small>Plak het bij Aan in je mailapp</small></button>
-        <button class="knop" id="opKopieerRef" type="button">Kenmerk deelnemer kopi&euml;ren<small id="opRefTekst"></small></button>
+        <button class="knop" id="opKopieerRef" type="button">Naam en referentienummer kopi&euml;ren<small id="opRefTekst"></small></button>
         <button class="knop" id="opOpnieuw" type="button">Opnieuw opnemen</button>
-        <p class="uitleg">Kies in je mailapp (bijvoorbeeld Gmail) en stuur het bestand naar de co&ouml;rdinator: <b>willem.kolthof@humanitas-noord.nl</b>. Het onderwerp staat er al in als je een mailapp kiest. Kies je WhatsApp of OneDrive, of staat het kenmerk er niet in, kopieer het kenmerk dan hierboven en plak het erbij. Verwijder de opname daarna van je telefoon.</p>
+        <p class="uitleg">Kies in je mailapp (bijvoorbeeld Gmail) en stuur het bestand naar de co&ouml;rdinator: <b>willem.kolthof@humanitas-noord.nl</b>. Het onderwerp staat er al in als je een mailapp kiest. Kies je WhatsApp of OneDrive, of staat het niet in het onderwerp, kopieer dan de naam met het referentienummer hierboven en plak het erbij. Verwijder de opname daarna van je telefoon.</p>
       </div>
     </div>
 
@@ -262,7 +261,7 @@ function opReset() {
 function toonOpname(g, dn) {
   const p = dn.split(" - Ref ");
   op.g = g; op.dn = dn; op.hv = p[1] || ""; op.naam = p[0];
-  $("opRefTekst").textContent = opKenmerk();
+  $("opRefTekst").textContent = dn;
   $("opNaam").textContent = p[0];
   const nu = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
   [].forEach.call(document.querySelectorAll(".opvw"), e => { e.textContent = g.v; });
@@ -362,16 +361,10 @@ $("opDeel").onclick = () => {
   });
 };
 $("opKopieerRef").onclick = () => {
-  const t = opKenmerk();
+  const t = op.dn;   // voornaam - Ref HV-nummer, zoals in de lijst; Excel herkent '- Ref HV-...' ook in een onderwerp
   const klaar = () => opMeld("Gekopieerd: " + t + ". Plak het in het onderwerp of het bericht.");
   try { navigator.clipboard.writeText(t).then(klaar, () => opMeld("Kopiëren lukte niet. Het kenmerk is: " + t)); }
   catch (e) { opMeld("Kopiëren lukte niet. Het kenmerk is: " + t); }
-};
-$("opKopieer").onclick = () => {
-  const adres = "willem.kolthof@humanitas-noord.nl";
-  const klaar = () => opMeld("Gekopieerd: " + adres + ". Plak het bij Aan in je mailapp.");
-  try { navigator.clipboard.writeText(adres).then(klaar, () => opMeld("Kopiëren lukte niet. Het adres is " + adres)); }
-  catch (e) { opMeld("Kopiëren lukte niet. Het adres is " + adres); }
 };
 $("opBewaar").onclick = () => {
   if (!op.bestand) { opMeld("De opname wordt nog omgezet. Probeer het over een paar seconden opnieuw."); return; }

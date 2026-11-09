@@ -68,10 +68,11 @@
     <div id="tkblok">
       <h2>Terugkoppeling: over wie wil je iets doorgeven?</h2>
       <div id="deelnemers"></div>
-      <button class="knop" id="andereKnop" type="button">Andere deelnemer&hellip;<small>Staat hij of zij er niet bij? Typ de voornaam of het nummer (HV-&hellip;)</small></button>
+      <button class="knop" id="andereKnop" type="button">Andere deelnemer&hellip;<small>Staat hij of zij er niet bij? Typ de voornaam of het nummer (HV-&hellip;). Alleen deelnemers die al in Excel staan.</small></button>
       <div id="andereBlok" class="verborgen">
         <input id="andereNaam" type="text" autocomplete="off" aria-label="Voornaam of HV-nummer van de deelnemer" placeholder="Voornaam of HV-nummer">
-        <button class="knop hoofd" id="andereGo" type="button">Terugkoppeling geven</button>
+        <button class="knop hoofd" id="andereGo" type="button">Zoeken</button>
+        <div id="andereUitslag"></div>
       </div>
     </div>
     <h2>Handig</h2>
@@ -188,26 +189,50 @@ function voornaam(v) { return String(v).trim().split(" ")[0]; }
 
 function formLink(vw, dn) { return FORM + "&" + VRAAG_VW + "=" + encodeURIComponent(vw) + "&" + VRAAG_DN + "=" + encodeURIComponent(dn); }
 
+// knop voor een deelnemer; bij nog niet binnen toestemming eerst het opnamescherm (daar staat ook de knop Terugkoppeling deelnemer)
+function deelnemerKnop(g, dn, metToestemming) {
+  const a = document.createElement("a");
+  const p = dn.split(" - Ref ");
+  a.className = "knop";
+  a.href = formLink(g.v, dn);
+  a.append(p[0]);
+  if (p[1]) { const s = document.createElement("small"); s.textContent = p[1]; a.append(s); }
+  if (metToestemming && Array.isArray(g.z) && g.z.indexOf(dn) >= 0) {
+    const t = document.createElement("small"); t.className = "tekort"; t.textContent = "Toestemming nog niet binnen"; a.append(t);
+    a.onclick = e => { e.preventDefault(); toonOpname(g, dn); };
+  }
+  return a;
+}
+
+// zoekt onder Andere deelnemer op voornaam (begin) of HV-nummer (deel) in de eigen deelnemers (g.d) en de overige bekende deelnemers (g.o)
+function zoekAnder(g, tekst) {
+  const q = String(tekst || "").trim().toLowerCase();
+  const uit = $("andereUitslag"); uit.innerHTML = "";
+  if (!q) return;
+  const eigen = g.d || [], extra = g.o || [];
+  const alle = eigen.concat(extra.filter(x => eigen.indexOf(x) < 0));
+  let gevonden = alle.filter(x => { const p = x.split(" - Ref "); return (q.length >= 2 && p[0].toLowerCase().startsWith(q)) || (q.length >= 3 && (p[1] || "").toLowerCase().indexOf(q) >= 0); });
+  const exact = gevonden.filter(x => x.split(" - Ref ")[0].toLowerCase() === q || (x.split(" - Ref ")[1] || "").toLowerCase() === q);
+  if (exact.length) gevonden = exact;
+  if (!gevonden.length) {
+    const m = document.createElement("p"); m.className = "uitleg";
+    m.textContent = "Geen bekende deelnemer gevonden met “" + tekst.trim() + "”. Nieuwe deelnemers worden eerst door Willem in Excel gezet; daarna kun je ze hier kiezen. Mail of bel Willem: 06 17187589.";
+    uit.append(m); return;
+  }
+  const k = document.createElement("p"); k.className = "uitleg";
+  k.textContent = gevonden.length === 1 ? "Gevonden in Excel. Klopt dit? Dan zie je het HV-nummer hieronder." : "Meer dan één deelnemer gevonden. Kies de juiste (met HV-nummer):";
+  uit.append(k);
+  gevonden.forEach(dn => uit.append(deelnemerKnop(g, dn, eigen.indexOf(dn) >= 0)));
+}
+
 function lijst(g) {
   $("wie").textContent = g.v;
   const box = $("deelnemers"); box.innerHTML = "";
-  g.d.forEach(dn => {
-    const a = document.createElement("a");
-    const p = dn.split(" - Ref ");
-    a.className = "knop";
-    a.href = formLink(g.v, dn);
-    a.append(p[0]);
-    if (p[1]) { const s = document.createElement("small"); s.textContent = p[1]; a.append(s); }
-    // toestemming nog niet binnen: eerst het opnamescherm (daar staat ook de knop naar het formulier)
-    if (Array.isArray(g.z) && g.z.indexOf(dn) >= 0) {
-      const t = document.createElement("small"); t.className = "tekort"; t.textContent = "Toestemming nog niet binnen"; a.append(t);
-      a.onclick = e => { e.preventDefault(); toonOpname(g, dn); };
-    }
-    box.append(a);
-  });
-  // deelnemer die (nog) niet in de lijst staat: voornaam of HV-nummer intikken, Excel herkent die bij het inlezen
+  g.d.forEach(dn => box.append(deelnemerKnop(g, dn, true)));
+  // deelnemer die niet in het lijstje staat: voornaam of HV-nummer intikken; de app zoekt alleen onder bekende deelnemers
+  // (eigen, nog niet gekoppelde en recent losgekoppelde) en toont het HV-nummer uit Excel. Nieuwe deelnemers worden hier niet ingevoerd.
   $("andereKnop").onclick = () => { $("andereBlok").classList.remove("verborgen"); $("andereKnop").classList.add("verborgen"); $("andereNaam").focus(); };
-  const ga = () => { const t = $("andereNaam").value.trim(); if (t) location.href = formLink(g.v, t); };
+  const ga = () => zoekAnder(g, $("andereNaam").value);
   $("andereGo").onclick = ga;
   $("andereNaam").onkeydown = e => { if (e.key === "Enter") ga(); };
   // profielknop alleen als het profiel nog niet is ingevuld

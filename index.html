@@ -51,10 +51,16 @@
     <div id="tkblok">
       <h2>Terugkoppeling: over wie wil je iets doorgeven?</h2>
       <div id="deelnemers"></div>
+      <button class="knop" id="andereKnop" type="button">Andere deelnemer&hellip;<small>Staat hij of zij er niet bij? Typ de voornaam of het nummer (HV-&hellip;)</small></button>
+      <div id="andereBlok" class="verborgen">
+        <input id="andereNaam" type="text" autocomplete="off" aria-label="Voornaam of HV-nummer van de deelnemer" placeholder="Voornaam of HV-nummer">
+        <button class="knop hoofd" id="andereGo" type="button">Terugkoppeling geven</button>
+      </div>
     </div>
     <h2>Handig</h2>
     <a class="knop verborgen" id="profiel" target="_blank" rel="noopener">Mijn vrijwilligersprofiel invullen<small>Nog niet ingevuld: daarmee krijg je hulpvragen die bij je passen</small></a>
     <a class="knop" href="werkwijze.pdf" target="_blank" rel="noopener">Hoe werkt het?<small>Werkwijze nieuwe hulpvraag (pdf)</small></a>
+    <p class="uitleg" id="bijgewerkt"></p>
     <p class="uitleg">Nieuwe hulpvragen krijg je per mail. Reageer met Beantwoorden en laat het nummer HV-&hellip; in het onderwerp staan.</p>
     <p class="uitleg">Is er echt iets aan de hand? Mail of bel Willem: 06 17187589.</p>
   </section>
@@ -67,7 +73,7 @@
 // Wachtwoord van dit kwartaal: alleen de SHA-256 van (zout + wachtwoord) staat hier.
 const PERIODE = "2026-K4";
 const ZOUT = "humanitas-tynaarlo-tk";
-const WW_HASH = "c2e9c5e643651b6bd0bcf18b3a630ae9f9f7f0adf4939eccf559cce5c8a47cb9";
+const WW_HASH = "a46b390b1f7d8458fc4455fff769cfe28bba7f2c74791a9cfc788b31deb72077";
 const FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT_kjkON_ReWy6tcrBlZnAibi_dHjyEahgqTJAlUQURCMU9NSUxZWERaS1pEMjBGUE83TUNROC4u";
 const VRAAG_VW = "r250150172a6b454fae636bc9e1d45795";
 const VRAAG_DN = "r7d4b6d8d128d4a86a00713abaf3233a6";
@@ -97,6 +103,8 @@ function toon(id) { ["slot", "lijst", "leeg"].forEach(s => $(s).classList.toggle
 
 function voornaam(v) { return String(v).trim().split(" ")[0]; }
 
+function formLink(vw, dn) { return FORM + "&" + VRAAG_VW + "=" + encodeURIComponent(vw) + "&" + VRAAG_DN + "=" + encodeURIComponent(dn); }
+
 function lijst(g) {
   $("wie").textContent = g.v;
   const box = $("deelnemers"); box.innerHTML = "";
@@ -104,18 +112,95 @@ function lijst(g) {
     const a = document.createElement("a");
     const p = dn.split(" - Ref ");
     a.className = "knop";
-    a.href = FORM + "&" + VRAAG_VW + "=" + encodeURIComponent(g.v) + "&" + VRAAG_DN + "=" + encodeURIComponent(dn);
+    a.href = formLink(g.v, dn);
     a.append(p[0]);
     if (p[1]) { const s = document.createElement("small"); s.textContent = p[1]; a.append(s); }
     box.append(a);
   });
-  $("tkblok").classList.toggle("verborgen", g.d.length === 0);
+  // deelnemer die (nog) niet in de lijst staat: voornaam of HV-nummer intikken, Excel herkent die bij het inlezen
+  $("andereKnop").onclick = () => { $("andereBlok").classList.remove("verborgen"); $("andereKnop").classList.add("verborgen"); $("andereNaam").focus(); };
+  const ga = () => { const t = $("andereNaam").value.trim(); if (t) location.href = formLink(g.v, t); };
+  $("andereGo").onclick = ga;
+  $("andereNaam").onkeydown = e => { if (e.key === "Enter") ga(); };
   // profielknop alleen als het profiel nog niet is ingevuld
   if (g.p === 0) { $("profiel").href = PROFIEL; $("profiel").classList.remove("verborgen"); }
   toon("lijst");
 }
 
+// ---- vaste link (v3): de link bevat alleen een token; de lijst staat versleuteld in data/<token>.json ----
+const ITER = 200000;
+function unb64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+function hex(u8) { return Array.from(u8).map(x => x.toString(16).padStart(2, "0")).join(""); }
+function unhex(s) { const a = new Uint8Array(s.length / 2); for (let i = 0; i < a.length; i++) a[i] = parseInt(s.substr(i * 2, 2), 16); return a; }
+async function sleutelUitWachtwoord(ww, token) {
+  const basis = await crypto.subtle.importKey("raw", new TextEncoder().encode(ww.trim().toLowerCase()), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", iterations: ITER, salt: new TextEncoder().encode(ZOUT + ":" + PERIODE + ":" + token) }, basis, 256);
+  return new Uint8Array(bits);
+}
+async function ontsleutel(sleutel, bestand) {
+  const key = await crypto.subtle.importKey("raw", sleutel, "AES-GCM", false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(bestand.iv) }, key, unb64(bestand.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function haalBestand(token) {
+  try {
+    const r = await fetch("data/" + encodeURIComponent(token) + ".json?ts=" + Date.now(), { cache: "no-store" });
+    if (r.status === 404) return "onbekend";
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e) { return null; }
+}
+function datumTijd(t) {
+  const d = new Date(t);
+  if (isNaN(d)) return "";
+  return d.getDate() + "-" + (d.getMonth() + 1) + "-" + d.getFullYear() + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+}
+// haalt de lijst op en ontsleutelt hem; zonder verbinding geldt de laatst bekende lijst. Fouten: "ww" (verkeerd wachtwoord), "onbekend", "verbinding"
+async function laadToken(token, sleutel) {
+  const bestand = await haalBestand(token);
+  const cache = "tk_cache:" + token;
+  if (bestand && bestand !== "onbekend") {
+    let g;
+    try { g = await ontsleutel(sleutel, bestand); } catch (e) { throw "ww"; }
+    schrijf(cache, JSON.stringify(g));
+    return { g: g, offline: false };
+  }
+  const c = lees(cache);
+  if (c) { try { return { g: JSON.parse(c), offline: true }; } catch (e) {} }
+  throw bestand === "onbekend" ? "onbekend" : "verbinding";
+}
+async function startToken(token) {
+  const sleutelNaam = "tk_key:" + PERIODE + ":" + token;
+  const toonResultaat = r => {
+    $("bijgewerkt").textContent = (r.offline ? "Geen verbinding: dit is de laatst bekende lijst" : "Lijst") + (r.g.t ? " van " + datumTijd(r.g.t) : "") + ".";
+    lijst(r.g);
+  };
+  const sleutelHex = lees(sleutelNaam);
+  if (sleutelHex) {
+    try { toonResultaat(await laadToken(token, unhex(sleutelHex))); return; }
+    catch (e) { if (e === "onbekend") { toon("leeg"); return; } if (e === "verbinding") { toon("leeg"); $("leeg").querySelector("p").textContent = "Geen verbinding. Probeer het later opnieuw."; return; } }
+  }
+  toon("slot");
+  const probeer = async () => {
+    try {
+      const sleutel = await sleutelUitWachtwoord($("ww").value, token);
+      const r = await laadToken(token, sleutel);
+      schrijf(sleutelNaam, hex(sleutel)); $("ww").value = ""; toonResultaat(r);
+    } catch (e) {
+      $("fout").textContent = e === "ww" ? "Dit wachtwoord klopt niet." : e === "onbekend" ? "Deze app-link klopt niet (meer). Vraag Willem om een nieuwe." : "Geen verbinding. Probeer het later opnieuw.";
+    }
+  };
+  $("open").onclick = probeer;
+  $("ww").onkeydown = e => { if (e.key === "Enter") probeer(); };
+}
+
 async function start() {
+  const h = location.hash.slice(1);
+  if (h.indexOf("t=") === 0) {
+    const t = h.slice(2).replace(/[^A-Za-z0-9_-]/g, "");
+    if (t) { schrijf("tk_token", t); startToken(t); return; }
+  }
+  if (!h) { const t = lees("tk_token"); if (t) { startToken(t); return; } }
   const g = gegevens();
   if (!g) { toon("leeg"); return; }
   if (lees("tk_slot") === PERIODE + ":" + WW_HASH) { lijst(g); return; }

@@ -143,8 +143,9 @@
         <div class="rij" style="margin-bottom:12px"><button class="knop hoofd" id="opDeel" type="button">Stuur het bestand naar de co&ouml;rdinator</button><button class="knop" id="opBewaar" type="button">Opslaan als bestand</button></div>
         <div id="opmelding"></div>
         <button class="knop" id="opKopieer" type="button">Mailadres van de co&ouml;rdinator kopi&euml;ren<small>Plak het bij Aan in je mailapp</small></button>
+        <button class="knop" id="opKopieerRef" type="button">Kenmerk deelnemer kopi&euml;ren<small id="opRefTekst"></small></button>
         <button class="knop" id="opOpnieuw" type="button">Opnieuw opnemen</button>
-        <p class="uitleg">Kies in je mailapp (bijvoorbeeld Gmail) en stuur het bestand naar de co&ouml;rdinator: <b>willem.kolthof@humanitas-noord.nl</b>. Het onderwerp staat er al in. Verwijder de opname daarna van je telefoon.</p>
+        <p class="uitleg">Kies in je mailapp (bijvoorbeeld Gmail) en stuur het bestand naar de co&ouml;rdinator: <b>willem.kolthof@humanitas-noord.nl</b>. Het onderwerp staat er al in als je een mailapp kiest. Kies je WhatsApp of OneDrive, of staat het kenmerk er niet in, kopieer het kenmerk dan hierboven en plak het erbij. Verwijder de opname daarna van je telefoon.</p>
       </div>
     </div>
 
@@ -246,6 +247,8 @@ function opMm(s) { s = Math.floor(s); return Math.floor(s / 60) + ":" + ("0" + (
 function opStatus(t) { $("opstatus").textContent = t; }
 function opMeld(t) { $("opmelding").textContent = t; opStatus(t); }
 function opStopStream() { if (op.stream) { op.stream.getTracks().forEach(t => t.stop()); op.stream = null; } if (op.timer) { clearInterval(op.timer); op.timer = null; } }
+// kenmerk van de opname: onderwerp van de mail en tekst om te plakken (Excel herkent "- Ref HV-nummer" in het onderwerp)
+function opKenmerk() { return "Toestemmingsopname - Ref " + op.hv + (op.naam ? " (" + op.naam + ")" : ""); }
 function opReset() {
   opStopStream();
   if (op.rec && op.rec.state !== "inactive") { op.rec.onstop = null; try { op.rec.stop(); } catch (e) {} }
@@ -258,7 +261,8 @@ function opReset() {
 }
 function toonOpname(g, dn) {
   const p = dn.split(" - Ref ");
-  op.g = g; op.dn = dn; op.hv = p[1] || "";
+  op.g = g; op.dn = dn; op.hv = p[1] || ""; op.naam = p[0];
+  $("opRefTekst").textContent = opKenmerk();
   $("opNaam").textContent = p[0];
   const nu = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
   [].forEach.call(document.querySelectorAll(".opvw"), e => { e.textContent = g.v; });
@@ -349,13 +353,19 @@ $("opDeel").onclick = () => {
   if (!navigator.share) { opMeld("Mailen kan niet in deze browser. Gebruik Opslaan als bestand en mail het bestand zelf aan de coördinator."); return; }
   if (!(op.bestand instanceof File)) { opMeld("De opname wordt nog omgezet of er is nog niets opgenomen. Probeer het over een paar seconden opnieuw."); return; }
   if (!(navigator.canShare && navigator.canShare({ files: [op.bestand] }))) { opMeld("Delen met dit bestandstype kan niet. Gebruik Opslaan als bestand en mail het bestand zelf aan de coördinator."); return; }
-  const titel = "Toestemmingsopname - Ref " + op.hv;
-  navigator.share({ files: [op.bestand], title: titel, text: titel }).then(() => {
+  const titel = opKenmerk();
+  navigator.share({ files: [op.bestand], title: titel, text: titel + ", vrijwilliger " + op.g.v }).then(() => {
     opMeld("Gedeeld. Is de mail aan de coördinator verzonden? Verwijder de opname dan van deze telefoon.");
   }).catch(e => {
     if (e && e.name === "AbortError") opMeld("Delen geannuleerd.");
     else opMeld("Delen mislukt (" + (e && e.name ? e.name : "onbekend") + "). Gebruik Opslaan als bestand en mail het zelf aan de coördinator.");
   });
+};
+$("opKopieerRef").onclick = () => {
+  const t = opKenmerk();
+  const klaar = () => opMeld("Gekopieerd: " + t + ". Plak het in het onderwerp of het bericht.");
+  try { navigator.clipboard.writeText(t).then(klaar, () => opMeld("Kopiëren lukte niet. Het kenmerk is: " + t)); }
+  catch (e) { opMeld("Kopiëren lukte niet. Het kenmerk is: " + t); }
 };
 $("opKopieer").onclick = () => {
   const adres = "willem.kolthof@humanitas-noord.nl";

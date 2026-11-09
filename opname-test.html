@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#00706b">
+<link rel="icon" href="icoon.png">
+<title>Proef toestemmingsopname</title>
+<style>
+  :root { --groen:#00706b; --tekst:#1d1d1d; --zacht:#5f6b6b; --rand:#d5dede; --bg:#f4f8f8; --geel:#fff6d6; --rood:#b3261e; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system, "Segoe UI", Roboto, Arial, sans-serif; background:var(--bg); color:var(--tekst); font-size:18px; }
+  header { background:var(--groen); color:#fff; padding:18px 16px; }
+  header h1 { margin:0; font-size:22px; }
+  header p { margin:4px 0 0; font-size:15px; opacity:.9; }
+  main { padding:16px; max-width:520px; margin:0 auto; }
+  h2 { font-size:17px; margin:22px 0 10px; color:var(--zacht); font-weight:600; }
+  label { display:block; font-size:15px; color:var(--zacht); margin:10px 0 4px; }
+  input { width:100%; padding:12px; font-size:18px; border:1px solid var(--rand); border-radius:10px; font-family:inherit; }
+  .tekst { background:#fff; border:1px solid var(--rand); border-radius:12px; padding:14px 16px; line-height:1.45; }
+  .tekst p { margin:0 0 12px; }
+  .tekst p:last-child { margin-bottom:0; }
+  .wie { font-size:14px; font-weight:700; color:var(--groen); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px !important; }
+  .opname { background:var(--geel); border:1px solid #ecd98f; border-radius:12px; padding:14px 16px; margin:12px 0; font-size:15px; }
+  .knop { display:block; width:100%; background:#fff; border:1px solid var(--rand); border-radius:12px; padding:16px; margin:0 0 12px; font-size:19px; color:var(--tekst); cursor:pointer; font-family:inherit; text-align:center; }
+  .knop:active { background:#e6f1f0; }
+  .hoofd { background:var(--groen); color:#fff; border:none; font-weight:600; }
+  .stop { background:var(--rood); color:#fff; border:none; font-weight:600; }
+  .knop[disabled] { opacity:.45; }
+  #tijd { font-size:44px; text-align:center; font-variant-numeric:tabular-nums; margin:8px 0; }
+  #status { text-align:center; color:var(--zacht); min-height:1.4em; margin-bottom:8px; }
+  audio { width:100%; margin:0 0 12px; }
+  #diag { font-size:14px; color:var(--zacht); background:#fff; border:1px solid var(--rand); border-radius:12px; padding:12px 14px; word-break:break-word; }
+  .verborgen { display:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Proef toestemmingsopname</h1>
+  <p>Alleen om te testen. De opname blijft op je telefoon en gaat nergens heen tot jij hem deelt.</p>
+</header>
+<main>
+  <h2>Gegevens voor de tekst</h2>
+  <label for="vw">Naam vrijwilliger</label>
+  <input id="vw" value="Willem" autocomplete="off">
+  <label for="dn">Naam deelnemer</label>
+  <input id="dn" value="Proefdeelnemer" autocomplete="off">
+
+  <h2>Tekst om voor te lezen</h2>
+  <div class="tekst">
+    <p class="wie">Eerst, zonder opname</p>
+    <p>Mijn naam is <b class="vwn"></b> en ik ben vrijwilliger bij Humanitas Thuisadministratie. U heeft informatie ontvangen over hoe Humanitas met uw persoonsgegevens omgaat. Mag ik dit gesprek opnemen om uw toestemming vast te leggen?</p>
+    <p class="wie">Als de deelnemer ja zegt: start de opname</p>
+    <p>Vandaag is het <b class="dat"></b>. Mijn naam is <b class="vwn"></b>, vrijwilliger bij Humanitas Thuisadministratie. Ik spreek met <b class="dnn"></b>.</p>
+    <p>Gaat u ermee akkoord dat we dit gesprek opnemen om uw toestemming vast te leggen?</p>
+    <p class="wie">Deelnemer</p>
+    <p>"Ja, daar ga ik mee akkoord."</p>
+    <p class="wie">Vrijwilliger</p>
+    <p>Geeft u vrijwillig toestemming aan Humanitas om uw persoonsgegevens voor de begeleiding bij de Thuisadministratie te verwerken en, voor zover daarvoor uw toestemming nodig is, vast te leggen in HRS, zoals uitgelegd in de informatie die u heeft ontvangen?</p>
+    <p class="wie">Deelnemer</p>
+    <p>"Ja, daar geef ik toestemming voor."</p>
+    <p class="wie">Vrijwilliger</p>
+    <p>Dank u wel. Hiermee is uw mondelinge toestemming vastgelegd.</p>
+  </div>
+  <div class="opname">Dit is een proefversie van de tekst: de opname begint hier bij "Vandaag is het", zodat datum en namen op de opname staan.</div>
+
+  <h2>Opnemen</h2>
+  <div id="tijd">0:00</div>
+  <div id="status">Klaar om op te nemen.</div>
+  <button class="knop hoofd" id="start">Opname starten</button>
+  <button class="knop stop verborgen" id="stop">Opname stoppen</button>
+
+  <div id="resultaat" class="verborgen">
+    <h2>Beluisteren en versturen</h2>
+    <audio id="speler" controls></audio>
+    <button class="knop hoofd" id="deel">Delen (mail, WhatsApp, ...)</button>
+    <button class="knop" id="bewaar">Opslaan als bestand</button>
+    <button class="knop" id="opnieuw">Opnieuw opnemen</button>
+  </div>
+
+  <h2>Wat deze telefoon kan</h2>
+  <div id="diag"></div>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var rec = null, stukken = [], stream = null, bestand = null, url = null, t0 = 0, timer = null, mime = "";
+
+  function datumTekst() {
+    return new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+  }
+  function invullen() {
+    var vw = $("vw").value.trim() || "[naam vrijwilliger]", dn = $("dn").value.trim() || "[naam deelnemer]";
+    [].forEach.call(document.querySelectorAll(".vwn"), function (e) { e.textContent = vw; });
+    [].forEach.call(document.querySelectorAll(".dnn"), function (e) { e.textContent = dn; });
+    [].forEach.call(document.querySelectorAll(".dat"), function (e) { e.textContent = datumTekst(); });
+  }
+  $("vw").addEventListener("input", invullen);
+  $("dn").addEventListener("input", invullen);
+  invullen();
+
+  function kiesMime() {
+    if (!window.MediaRecorder) return null;
+    var kandidaten = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+    for (var i = 0; i < kandidaten.length; i++) {
+      try { if (MediaRecorder.isTypeSupported(kandidaten[i])) return kandidaten[i]; } catch (e) {}
+    }
+    return "";
+  }
+  function extensie(m) { return /mp4|aac/.test(m) ? "m4a" : /ogg/.test(m) ? "ogg" : "webm"; }
+  function mm(s) { s = Math.floor(s); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
+  function status(t) { $("status").textContent = t; }
+
+  var d = [];
+  d.push("Microfoon (https): " + (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext ? "ja" : "NEE"));
+  d.push("Opnemen (MediaRecorder): " + (window.MediaRecorder ? "ja" : "NEE"));
+  d.push("Bestandsvorm: " + (kiesMime() || "onbekend"));
+  var proef = null; try { proef = new File(["x"], "t.m4a", { type: "audio/mp4" }); } catch (e) {}
+  d.push("Delen met bestand: " + (navigator.canShare && proef && navigator.canShare({ files: [proef] }) ? "ja" : "nee, dan opslaan als bestand"));
+  d.push("Op beginscherm als app: " + ((window.navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches)) ? "ja" : "nee (gewone browser)"));
+  d.push("Telefoon: " + navigator.userAgent);
+  $("diag").innerHTML = d.map(function (r) { return r.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }).join("<br>");
+
+  function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+  function stopStream() { if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; } }
+
+  $("start").addEventListener("click", function () {
+    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !window.MediaRecorder) {
+      status("Opnemen werkt niet in deze browser. Probeer Chrome of Safari.");
+      return;
+    }
+    status("Wacht op toestemming voor de microfoon...");
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (s) {
+      stream = s; stukken = []; mime = kiesMime();
+      try { rec = mime ? new MediaRecorder(s, { mimeType: mime }) : new MediaRecorder(s); }
+      catch (e) { rec = new MediaRecorder(s); }
+      mime = rec.mimeType || mime || "audio/webm";
+      rec.ondataavailable = function (e) { if (e.data && e.data.size) stukken.push(e.data); };
+      rec.onstop = klaar;
+      rec.start(1000);
+      t0 = Date.now(); $("tijd").textContent = "0:00";
+      timer = setInterval(function () { $("tijd").textContent = mm((Date.now() - t0) / 1000); }, 250);
+      $("start").classList.add("verborgen"); $("stop").classList.remove("verborgen");
+      $("resultaat").classList.add("verborgen");
+      status("Er wordt opgenomen...");
+    }).catch(function (e) {
+      status("Geen toegang tot de microfoon (" + (e && e.name ? e.name : "onbekend") + "). Sta de microfoon toe voor deze pagina en probeer opnieuw.");
+    });
+  });
+
+  $("stop").addEventListener("click", function () {
+    stopTimer();
+    if (rec && rec.state !== "inactive") rec.stop();
+    stopStream();
+    $("stop").classList.add("verborgen"); $("start").classList.remove("verborgen");
+  });
+
+  function klaar() {
+    var type = (mime || "audio/webm").split(";")[0];
+    var blob = new Blob(stukken, { type: type });
+    var naam = "Toestemming-proef-" + new Date().toISOString().slice(0, 10) + "." + extensie(type);
+    try { bestand = new File([blob], naam, { type: type }); } catch (e) { bestand = blob; bestand.name = naam; }
+    if (url) URL.revokeObjectURL(url);
+    url = URL.createObjectURL(blob);
+    $("speler").src = url;
+    $("resultaat").classList.remove("verborgen");
+    status("Opname klaar: " + mm((Date.now() - t0) / 1000) + ", " + Math.round(blob.size / 1024) + " kB, " + naam);
+  }
+
+  $("deel").addEventListener("click", function () {
+    if (navigator.canShare && bestand instanceof File && navigator.canShare({ files: [bestand] })) {
+      navigator.share({ files: [bestand], title: "Toestemmingsopname (proef)" }).then(function () {
+        status("Gedeeld. Verwijder de opname daarna van deze telefoon.");
+      }).catch(function (e) { if (e && e.name !== "AbortError") status("Delen mislukt (" + e.name + "). Gebruik Opslaan als bestand."); });
+    } else {
+      status("Delen met een bestand kan niet op deze telefoon. Gebruik Opslaan als bestand.");
+    }
+  });
+  $("bewaar").addEventListener("click", function () {
+    var a = document.createElement("a");
+    a.href = url; a.download = bestand.name; document.body.appendChild(a); a.click(); a.remove();
+    status("Opgeslagen als " + bestand.name + " (kijk bij Downloads of Bestanden).");
+  });
+  $("opnieuw").addEventListener("click", function () {
+    $("resultaat").classList.add("verborgen"); $("tijd").textContent = "0:00"; status("Klaar om op te nemen.");
+  });
+})();
+</script>
+</body>
+</html>

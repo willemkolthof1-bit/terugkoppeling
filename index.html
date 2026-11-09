@@ -118,7 +118,7 @@
     <div class="deel met">
       <h3>Deel 2: met opname</h3>
       <p class="uitleg">Druk eerst op <b>Opname starten</b>. Lees daarna de tekst hieronder voor. Stop de opname aan het eind.</p>
-      <div class="balk">
+      <div class="balk" id="opBalk">
         <div id="optijd">0:00</div>
         <div id="opstatus">Klaar om op te nemen.</div>
         <button class="knop hoofd" id="opStart" type="button">Opname starten</button>
@@ -126,11 +126,10 @@
       </div>
       <div id="opResultaat" class="verborgen">
         <audio id="opSpeler" controls></audio>
-        <button class="knop hoofd" id="opDeel" type="button">Opname mailen aan Willem</button>
+        <div class="rij" style="margin-bottom:12px"><button class="knop hoofd" id="opDeel" type="button">Mailen aan Willem</button><button class="knop" id="opBewaar" type="button">Opslaan als bestand</button></div>
         <div id="opmelding"></div>
-        <button class="knop" id="opBewaar" type="button">Opslaan als bestand</button>
         <button class="knop" id="opOpnieuw" type="button">Opnieuw opnemen</button>
-        <p class="uitleg">Kies bij het mailen je mailapp en stuur de opname naar <b>willem.kolthof@humanitas-noord.nl</b>. Het onderwerp staat er al in. Verwijder de opname daarna van je telefoon.</p>
+        <p class="uitleg">Kies bij Mailen je mailapp en stuur de opname naar <b>willem.kolthof@humanitas-noord.nl</b>. Het onderwerp staat er al in. Verwijder de opname daarna van je telefoon.</p>
       </div>
       <div class="tekst">
         <p class="wie">Vrijwilliger</p>
@@ -252,6 +251,7 @@ function opReset() {
   op.rec = null; op.stukken = []; op.bestand = null;
   if (op.url) { URL.revokeObjectURL(op.url); op.url = null; }
   $("opSpeler").removeAttribute("src");
+  $("opBalk").style.position = "sticky";
   $("opResultaat").classList.add("verborgen"); $("opStop").classList.add("verborgen"); $("opStart").classList.remove("verborgen");
   $("optijd").textContent = "0:00"; $("opmelding").textContent = ""; opStatus("Klaar om op te nemen.");
 }
@@ -304,14 +304,15 @@ function opKlaar() {
   const naam = "Toestemming-" + (op.hv || "HV") + "-" + new Date().toISOString().slice(0, 10) + ".wav";
   if (op.url) URL.revokeObjectURL(op.url);
   op.url = URL.createObjectURL(blob); $("opSpeler").src = op.url; op.bestand = null;
+  $("opBalk").style.position = "static";   // na de opname geen vastgeplakte balk: de knoppen Mailen en Opslaan moeten in beeld kunnen
   $("opResultaat").classList.remove("verborgen");
   $("opmelding").textContent = "Bezig met omzetten naar een bestand dat overal werkt...";
   opStatus("Opname klaar (" + duur + "). Even wachten, hij wordt omgezet.");
   try { $("opResultaat").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
   opNaarWav(blob).then(w => {
     try { op.bestand = new File([w], naam, { type: "audio/wav" }); } catch (e) { op.bestand = w; op.bestand.name = naam; }
-    $("opmelding").textContent = "Klaar: " + naam + ", " + Math.round(w.size / 1024) + " kB. Kies Opname mailen aan Willem.";
-    opStatus("Opname klaar (" + duur + "). Hij staat nog alleen op dit scherm: mail hem aan Willem.");
+    $("opmelding").textContent = "Klaar: " + naam + ", " + Math.round(w.size / 1024) + " kB. Kies Mailen aan Willem of Opslaan als bestand.";
+    opStatus("Opname klaar (" + duur + "). Hij staat nog alleen op dit scherm: mail hem aan Willem of sla hem op.");
   }).catch(e => {
     $("opmelding").textContent = "Omzetten lukte niet (" + (e && e.name ? e.name : "onbekend") + "). Neem de opname opnieuw op, of laat de deelnemer op papier tekenen.";
   });
@@ -331,6 +332,7 @@ $("opStart").onclick = () => {
     op.rec.start(1000);
     op.t0 = Date.now(); $("optijd").textContent = "0:00";
     op.timer = setInterval(() => { $("optijd").textContent = opMm((Date.now() - op.t0) / 1000); }, 250);
+    $("opBalk").style.position = "sticky";
     $("opStart").classList.add("verborgen"); $("opStop").classList.remove("verborgen"); $("opResultaat").classList.add("verborgen");
     opStatus("Er wordt opgenomen... lees nu de tekst voor.");
   }).catch(e => { opStatus("Geen toegang tot de microfoon (" + (e && e.name ? e.name : "onbekend") + "). Sta de microfoon toe voor deze pagina en probeer opnieuw."); });

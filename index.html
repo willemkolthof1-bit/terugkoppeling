@@ -33,6 +33,23 @@
   .fout { color:#b00020; min-height:1.4em; font-size:16px; }
   .uitleg { color:var(--zacht); font-size:15px; line-height:1.45; }
   .verborgen { display:none; }
+  .tekst { background:#fff; border:1px solid var(--rand); border-radius:12px; padding:14px 16px; line-height:1.45; font-size:18px; }
+  .tekst p { margin:0 0 12px; }
+  .tekst p:last-child { margin-bottom:0; }
+  .wie { font-size:14px; font-weight:700; color:var(--groen); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px !important; }
+  .deel { border-radius:14px; padding:14px 14px 16px; margin:18px 0 0; }
+  .deel h3 { margin:0 0 4px; font-size:20px; }
+  .deel .uitleg { margin:0 0 12px; }
+  .zonder { background:#eceff0; border:2px dashed #9aa6a6; }
+  .met { background:#fdeeee; border:2px solid #b3261e; }
+  .met h3 { color:#b3261e; }
+  .stop { background:#b3261e; color:#fff; border:none; font-weight:600; text-align:center; }
+  .balk { position:sticky; top:0; z-index:5; background:#fdeeee; padding:6px 0 2px; }
+  #optijd { font-size:36px; text-align:center; font-variant-numeric:tabular-nums; margin:0; }
+  #opstatus { text-align:center; color:var(--zacht); min-height:1.4em; margin:0 0 8px; font-size:15px; }
+  #opmelding { font-size:15px; color:#3f4a4a; margin:-4px 0 12px; min-height:1.3em; word-break:break-word; }
+  audio { width:100%; margin:0 0 12px; }
+  .tekort { display:block; color:#8a5a00; font-size:14px; margin-top:2px; }
 </style>
 </head>
 <body>
@@ -68,6 +85,72 @@
     <p>Deze app kent je gegevens nog niet.</p>
     <p class="uitleg">Open de app-link uit de mail van Willem, dan staan je gegevens erin.</p>
   </section>
+  <section id="opname" class="verborgen">
+    <button class="knop" id="opTerug" type="button">&larr; Terug naar de lijst</button>
+    <h2>Toestemming vastleggen: <span id="opNaam"></span></h2>
+    <p class="uitleg">Voor deze deelnemer is nog geen toestemmingsverklaring binnen. Kies hoe de toestemming wordt vastgelegd.</p>
+    <div id="opKeuze">
+      <button class="knop hoofd" id="opKiesOpname" type="button">Mondeling akkoord opnemen<small>De deelnemer geeft mondeling toestemming; je neemt dat op met je telefoon</small></button>
+      <a class="knop" id="opKiesTekenen">Een getekende verklaring<small>De deelnemer tekent de verklaring, zoals altijd. Ga verder naar het formulier.</small></a>
+    </div>
+    <div id="opWerk" class="verborgen">
+    <p class="uitleg">Liever toch een getekende verklaring? Ga dan onderaan gewoon verder naar het formulier.</p>
+
+    <div class="deel zonder">
+      <h3>Deel 1: zonder opname</h3>
+      <p class="uitleg">Lees dit eerst voor. Er wordt nog niets opgenomen.</p>
+      <div class="tekst">
+        <p class="wie">Vrijwilliger</p>
+        <p>Mijn naam is <b class="opvw"></b> en ik ben vrijwilliger bij Humanitas Thuisadministratie. Ik spreek met <b class="opdn"></b>.</p>
+        <p>U heeft informatie ontvangen over hoe Humanitas met uw persoonsgegevens omgaat.</p>
+        <p>Humanitas gebruikt uw gegevens om u te kunnen begeleiden bij uw thuisadministratie. De gegevens die daarvoor nodig zijn, worden vastgelegd in HRS, het administratiesysteem van Humanitas, en in ons eigen beveiligde systeem voor de Thuisadministratie.</p>
+        <p>U heeft het recht om te vragen welke gegevens van u zijn vastgelegd en om uw toestemming weer in te trekken.</p>
+        <p>Voordat we verdergaan, wil ik u vragen of u ermee akkoord gaat dat we het volgende deel opnemen om uw toestemming vast te leggen.</p>
+        <p class="wie">Deelnemer</p>
+        <p>"Ja, daar ga ik mee akkoord."</p>
+        <p class="wie">Vrijwilliger</p>
+        <p>Dank u wel. Dan start ik nu de opname.</p>
+        <p class="wie">Ga nu naar deel 2 en druk op Opname starten</p>
+      </div>
+    </div>
+
+    <div class="deel met">
+      <h3>Deel 2: met opname</h3>
+      <p class="uitleg">Druk eerst op <b>Opname starten</b>. Lees daarna de tekst hieronder voor. Stop de opname aan het eind.</p>
+      <div class="balk">
+        <div id="optijd">0:00</div>
+        <div id="opstatus">Klaar om op te nemen.</div>
+        <button class="knop hoofd" id="opStart" type="button">Opname starten</button>
+        <button class="knop stop verborgen" id="opStop" type="button">Opname stoppen</button>
+      </div>
+      <div id="opResultaat" class="verborgen">
+        <audio id="opSpeler" controls></audio>
+        <button class="knop hoofd" id="opDeel" type="button">Opname mailen aan Willem</button>
+        <div id="opmelding"></div>
+        <button class="knop" id="opBewaar" type="button">Opslaan als bestand</button>
+        <button class="knop" id="opOpnieuw" type="button">Opnieuw opnemen</button>
+        <p class="uitleg">Kies bij het mailen je mailapp en stuur de opname naar <b>willem.kolthof@humanitas-noord.nl</b>. Het onderwerp staat er al in. Verwijder de opname daarna van je telefoon.</p>
+      </div>
+      <div class="tekst">
+        <p class="wie">Vrijwilliger</p>
+        <p>Vandaag is het <b class="opdat"></b>. Mijn naam is <b class="opvw"></b>, vrijwilliger bij Humanitas Thuisadministratie. Ik spreek met <b class="opdn"></b>. Het nummer is <b class="ophv"></b>.</p>
+        <p>Gaat u ermee akkoord dat we dit gesprek opnemen om uw toestemming vast te leggen?</p>
+        <p class="wie">Deelnemer</p>
+        <p>"Ja, daar ga ik mee akkoord."</p>
+        <p class="wie">Vrijwilliger</p>
+        <p>Geeft u vrijwillig toestemming aan Humanitas om uw persoonsgegevens voor de begeleiding bij de Thuisadministratie te verwerken en, voor zover daarvoor uw toestemming nodig is, vast te leggen in HRS, het administratiesysteem van Humanitas, en in ons eigen beveiligde systeem, zoals uitgelegd in de informatie die u heeft ontvangen?</p>
+        <p class="wie">Deelnemer</p>
+        <p>"Ja, daar geef ik toestemming voor."</p>
+        <p class="wie">Vrijwilliger</p>
+        <p>Dank u wel. Hiermee is uw mondelinge toestemming vastgelegd.</p>
+        <p class="wie">Stop daarna de opname</p>
+      </div>
+    </div>
+
+    <h2>Daarna</h2>
+    <a class="knop hoofd" id="opVerder">Verder naar het formulier<small>Opname gemaild, of de deelnemer tekent liever toch een verklaring: ga dan gewoon verder</small></a>
+    </div>
+  </section>
 </main>
 <script>
 // Wachtwoord van dit kwartaal: alleen de SHA-256 van (zout + wachtwoord) staat hier.
@@ -99,7 +182,7 @@ async function sha(s) {
   return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join("");
 }
 
-function toon(id) { ["slot", "lijst", "leeg"].forEach(s => $(s).classList.toggle("verborgen", s !== id)); }
+function toon(id) { ["slot", "lijst", "leeg", "opname"].forEach(s => $(s).classList.toggle("verborgen", s !== id)); }
 
 function voornaam(v) { return String(v).trim().split(" ")[0]; }
 
@@ -115,6 +198,11 @@ function lijst(g) {
     a.href = formLink(g.v, dn);
     a.append(p[0]);
     if (p[1]) { const s = document.createElement("small"); s.textContent = p[1]; a.append(s); }
+    // toestemming nog niet binnen: eerst het opnamescherm (daar staat ook de knop naar het formulier)
+    if (Array.isArray(g.z) && g.z.indexOf(dn) >= 0) {
+      const t = document.createElement("small"); t.className = "tekort"; t.textContent = "Toestemming nog niet binnen"; a.append(t);
+      a.onclick = e => { e.preventDefault(); toonOpname(g, dn); };
+    }
     box.append(a);
   });
   // deelnemer die (nog) niet in de lijst staat: voornaam of HV-nummer intikken, Excel herkent die bij het inlezen
@@ -126,6 +214,128 @@ function lijst(g) {
   if (g.p === 0) { $("profiel").href = PROFIEL; $("profiel").classList.remove("verborgen"); }
   toon("lijst");
 }
+
+// ---- toestemming mondeling vastleggen: opname op de telefoon, daarna zelf mailen (er gaat niets naar een server) ----
+const op = { g: null, dn: "", hv: "", rec: null, stukken: [], stream: null, bestand: null, url: null, t0: 0, timer: null, mime: "" };
+function opMm(s) { s = Math.floor(s); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
+function opStatus(t) { $("opstatus").textContent = t; }
+function opMeld(t) { $("opmelding").textContent = t; opStatus(t); }
+function opStopStream() { if (op.stream) { op.stream.getTracks().forEach(t => t.stop()); op.stream = null; } if (op.timer) { clearInterval(op.timer); op.timer = null; } }
+function opReset() {
+  opStopStream();
+  if (op.rec && op.rec.state !== "inactive") { op.rec.onstop = null; try { op.rec.stop(); } catch (e) {} }
+  op.rec = null; op.stukken = []; op.bestand = null;
+  if (op.url) { URL.revokeObjectURL(op.url); op.url = null; }
+  $("opSpeler").removeAttribute("src");
+  $("opResultaat").classList.add("verborgen"); $("opStop").classList.add("verborgen"); $("opStart").classList.remove("verborgen");
+  $("optijd").textContent = "0:00"; $("opmelding").textContent = ""; opStatus("Klaar om op te nemen.");
+}
+function toonOpname(g, dn) {
+  const p = dn.split(" - Ref ");
+  op.g = g; op.dn = dn; op.hv = p[1] || "";
+  $("opNaam").textContent = p[0];
+  const nu = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+  [].forEach.call(document.querySelectorAll(".opvw"), e => { e.textContent = g.v; });
+  [].forEach.call(document.querySelectorAll(".opdn"), e => { e.textContent = p[0]; });
+  [].forEach.call(document.querySelectorAll(".opdat"), e => { e.textContent = nu; });
+  [].forEach.call(document.querySelectorAll(".ophv"), e => { e.textContent = op.hv || "(nummer ontbreekt)"; });
+  $("opVerder").href = formLink(g.v, dn);
+  $("opKiesTekenen").href = formLink(g.v, dn);
+  $("opKeuze").classList.remove("verborgen"); $("opWerk").classList.add("verborgen");
+  opReset(); toon("opname"); window.scrollTo(0, 0);
+}
+function opKiesMime() {
+  if (!window.MediaRecorder) return null;
+  const k = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+  for (let i = 0; i < k.length; i++) { try { if (MediaRecorder.isTypeSupported(k[i])) return k[i]; } catch (e) {} }
+  return "";
+}
+// Chrome en Safari nemen op als mp4/webm met Opus; WhatsApp en veel mailapps kunnen dat niet verwerken: daarom omzetten naar WAV (16 kHz, mono)
+function opNaarWav(blob) {
+  const AC = window.AudioContext || window.webkitAudioContext, OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  if (!AC || !OAC) return Promise.reject(new Error("geen AudioContext"));
+  return blob.arrayBuffer().then(buf => {
+    const ac = new AC();
+    return new Promise((ok, fout) => { ac.decodeAudioData(buf, ok, fout); }).then(ab => {
+      try { ac.close(); } catch (e) {}
+      const hz = 16000, oc = new OAC(1, Math.max(1, Math.ceil(ab.duration * hz)), hz), bron = oc.createBufferSource();
+      bron.buffer = ab; bron.connect(oc.destination); bron.start();
+      return oc.startRendering();
+    });
+  }).then(r => {
+    const x = r.getChannelData(0), n = x.length, b = new ArrayBuffer(44 + n * 2), v = new DataView(b);
+    const s = (o, t) => { for (let k = 0; k < t.length; k++) v.setUint8(o + k, t.charCodeAt(k)); };
+    s(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); s(8, "WAVE"); s(12, "fmt "); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 16000, true); v.setUint32(28, 32000, true);
+    v.setUint16(32, 2, true); v.setUint16(34, 16, true); s(36, "data"); v.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) { const f = Math.max(-1, Math.min(1, x[i])); v.setInt16(44 + i * 2, f < 0 ? f * 32768 : f * 32767, true); }
+    return new Blob([b], { type: "audio/wav" });
+  });
+}
+function opKlaar() {
+  const type = (op.mime || "audio/webm").split(";")[0];
+  const blob = new Blob(op.stukken, { type: type });
+  const duur = opMm((Date.now() - op.t0) / 1000);
+  const naam = "Toestemming-" + (op.hv || "HV") + "-" + new Date().toISOString().slice(0, 10) + ".wav";
+  if (op.url) URL.revokeObjectURL(op.url);
+  op.url = URL.createObjectURL(blob); $("opSpeler").src = op.url; op.bestand = null;
+  $("opResultaat").classList.remove("verborgen");
+  $("opmelding").textContent = "Bezig met omzetten naar een bestand dat overal werkt...";
+  opStatus("Opname klaar (" + duur + "). Even wachten, hij wordt omgezet.");
+  try { $("opResultaat").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
+  opNaarWav(blob).then(w => {
+    try { op.bestand = new File([w], naam, { type: "audio/wav" }); } catch (e) { op.bestand = w; op.bestand.name = naam; }
+    $("opmelding").textContent = "Klaar: " + naam + ", " + Math.round(w.size / 1024) + " kB. Kies Opname mailen aan Willem.";
+    opStatus("Opname klaar (" + duur + "). Hij staat nog alleen op dit scherm: mail hem aan Willem.");
+  }).catch(e => {
+    $("opmelding").textContent = "Omzetten lukte niet (" + (e && e.name ? e.name : "onbekend") + "). Neem de opname opnieuw op, of laat de deelnemer op papier tekenen.";
+  });
+}
+$("opTerug").onclick = () => { opReset(); toon("lijst"); };
+$("opKiesOpname").onclick = () => { $("opKeuze").classList.add("verborgen"); $("opWerk").classList.remove("verborgen"); window.scrollTo(0, 0); };
+$("opOpnieuw").onclick = () => opReset();
+$("opStart").onclick = () => {
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !window.MediaRecorder) { opStatus("Opnemen werkt niet in deze browser. Probeer Chrome of Safari, of laat de deelnemer op papier tekenen."); return; }
+  opStatus("Wacht op toestemming voor de microfoon...");
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
+    op.stream = s; op.stukken = []; op.mime = opKiesMime();
+    try { op.rec = op.mime ? new MediaRecorder(s, { mimeType: op.mime }) : new MediaRecorder(s); } catch (e) { op.rec = new MediaRecorder(s); }
+    op.mime = op.rec.mimeType || op.mime || "audio/webm";
+    op.rec.ondataavailable = e => { if (e.data && e.data.size) op.stukken.push(e.data); };
+    op.rec.onstop = opKlaar;
+    op.rec.start(1000);
+    op.t0 = Date.now(); $("optijd").textContent = "0:00";
+    op.timer = setInterval(() => { $("optijd").textContent = opMm((Date.now() - op.t0) / 1000); }, 250);
+    $("opStart").classList.add("verborgen"); $("opStop").classList.remove("verborgen"); $("opResultaat").classList.add("verborgen");
+    opStatus("Er wordt opgenomen... lees nu de tekst voor.");
+  }).catch(e => { opStatus("Geen toegang tot de microfoon (" + (e && e.name ? e.name : "onbekend") + "). Sta de microfoon toe voor deze pagina en probeer opnieuw."); });
+};
+$("opStop").onclick = () => {
+  if (op.timer) { clearInterval(op.timer); op.timer = null; }
+  if (op.rec && op.rec.state !== "inactive") op.rec.stop();
+  opStopStream();
+  $("opStop").classList.add("verborgen"); $("opStart").classList.remove("verborgen");
+};
+$("opDeel").onclick = () => {
+  opMeld("Delen wordt geprobeerd...");
+  if (!navigator.share) { opMeld("Mailen kan niet in deze browser. Gebruik Opslaan als bestand en mail het bestand zelf aan Willem."); return; }
+  if (!(op.bestand instanceof File)) { opMeld("De opname wordt nog omgezet of er is nog niets opgenomen. Probeer het over een paar seconden opnieuw."); return; }
+  if (!(navigator.canShare && navigator.canShare({ files: [op.bestand] }))) { opMeld("Delen met dit bestandstype kan niet. Gebruik Opslaan als bestand en mail het bestand zelf aan Willem."); return; }
+  const titel = "Toestemmingsopname - Ref " + op.hv;
+  navigator.share({ files: [op.bestand], title: titel, text: titel }).then(() => {
+    opMeld("Gedeeld. Staat de mail aan Willem verzonden? Verwijder de opname dan van deze telefoon.");
+  }).catch(e => {
+    if (e && e.name === "AbortError") opMeld("Delen geannuleerd.");
+    else opMeld("Delen mislukt (" + (e && e.name ? e.name : "onbekend") + "). Gebruik Opslaan als bestand en mail het zelf aan Willem.");
+  });
+};
+$("opBewaar").onclick = () => {
+  if (!op.bestand) { opMeld("De opname wordt nog omgezet. Probeer het over een paar seconden opnieuw."); return; }
+  const u = URL.createObjectURL(op.bestand), a = document.createElement("a");
+  a.href = u; a.download = op.bestand.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 10000);
+  opMeld("Opgeslagen als " + op.bestand.name + " (kijk bij Downloads of Bestanden). Mail dit bestand aan Willem, met " + op.hv + " in het onderwerp.");
+};
 
 // ---- vaste link (v3): de link bevat alleen een token; de lijst staat versleuteld in data/<token>.json ----
 const ITER = 200000;

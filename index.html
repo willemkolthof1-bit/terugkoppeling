@@ -128,6 +128,7 @@
         <audio id="opSpeler" controls></audio>
         <div class="rij" style="margin-bottom:12px"><button class="knop hoofd" id="opDeel" type="button">Mailen aan Willem</button><button class="knop" id="opBewaar" type="button">Opslaan als bestand</button></div>
         <div id="opmelding"></div>
+        <button class="knop" id="opKopieer" type="button">Mailadres van Willem kopi&euml;ren<small>Plak het bij Aan in je mailapp</small></button>
         <button class="knop" id="opOpnieuw" type="button">Opnieuw opnemen</button>
         <p class="uitleg">Kies bij Mailen je mailapp en stuur de opname naar <b>willem.kolthof@humanitas-noord.nl</b>. Het onderwerp staat er al in. Verwijder de opname daarna van je telefoon.</p>
       </div>
@@ -355,6 +356,12 @@ $("opDeel").onclick = () => {
     if (e && e.name === "AbortError") opMeld("Delen geannuleerd.");
     else opMeld("Delen mislukt (" + (e && e.name ? e.name : "onbekend") + "). Gebruik Opslaan als bestand en mail het zelf aan Willem.");
   });
+};
+$("opKopieer").onclick = () => {
+  const adres = "willem.kolthof@humanitas-noord.nl";
+  const klaar = () => opMeld("Gekopieerd: " + adres + ". Plak het bij Aan in je mailapp.");
+  try { navigator.clipboard.writeText(adres).then(klaar, () => opMeld("Kopiëren lukte niet. Het adres is " + adres)); }
+  catch (e) { opMeld("Kopiëren lukte niet. Het adres is " + adres); }
 };
 $("opBewaar").onclick = () => {
   if (!op.bestand) { opMeld("De opname wordt nog omgezet. Probeer het over een paar seconden opnieuw."); return; }

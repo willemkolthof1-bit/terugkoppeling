@@ -62,7 +62,7 @@
       <p class="wie">Vrijwilliger</p>
       <p>Mijn naam is <b class="vwn"></b> en ik ben vrijwilliger bij Humanitas Thuisadministratie. Ik spreek met <b class="dnn"></b>.</p>
       <p>U heeft informatie ontvangen over hoe Humanitas met uw persoonsgegevens omgaat.</p>
-      <p>Humanitas gebruikt uw gegevens om u te kunnen begeleiden bij uw thuisadministratie. De gegevens die daarvoor nodig zijn, worden vastgelegd in HRS en in ons eigen beveiligde systeem voor de Thuisadministratie.</p>
+      <p>Humanitas gebruikt uw gegevens om u te kunnen begeleiden bij uw thuisadministratie. De gegevens die daarvoor nodig zijn, worden vastgelegd in HRS, het administratiesysteem van Humanitas, en in ons eigen beveiligde systeem voor de Thuisadministratie.</p>
       <p>U heeft het recht om te vragen welke gegevens van u zijn vastgelegd en om uw toestemming weer in te trekken.</p>
       <p>Voordat we verdergaan, wil ik u vragen of u ermee akkoord gaat dat we het volgende deel opnemen om uw toestemming vast te leggen.</p>
       <p class="wie">Deelnemer</p>
@@ -87,6 +87,7 @@
     <div id="resultaat" class="verborgen">
       <audio id="speler" controls></audio>
       <button class="knop hoofd" id="deel">Delen (mail, WhatsApp, ...)</button>
+      <div id="deelmelding" style="font-size:15px;color:#3f4a4a;margin:-4px 0 12px;min-height:1.3em;word-break:break-word"></div>
       <button class="knop" id="bewaar">Opslaan als bestand</button>
       <button class="knop" id="opnieuw">Opnieuw opnemen</button>
     </div>
@@ -98,7 +99,7 @@
       <p class="wie">Deelnemer</p>
       <p>"Ja, daar ga ik mee akkoord."</p>
       <p class="wie">Vrijwilliger</p>
-      <p>Geeft u vrijwillig toestemming aan Humanitas om uw persoonsgegevens voor de begeleiding bij de Thuisadministratie te verwerken en, voor zover daarvoor uw toestemming nodig is, vast te leggen in HRS en in ons eigen beveiligde systeem, zoals uitgelegd in de informatie die u heeft ontvangen?</p>
+      <p>Geeft u vrijwillig toestemming aan Humanitas om uw persoonsgegevens voor de begeleiding bij de Thuisadministratie te verwerken en, voor zover daarvoor uw toestemming nodig is, vast te leggen in HRS, het administratiesysteem van Humanitas, en in ons eigen beveiligde systeem, zoals uitgelegd in de informatie die u heeft ontvangen?</p>
       <p class="wie">Deelnemer</p>
       <p>"Ja, daar geef ik toestemming voor."</p>
       <p class="wie">Vrijwilliger</p>
@@ -195,7 +196,9 @@
     var type = (mime || "audio/webm").split(";")[0];
     var blob = new Blob(stukken, { type: type });
     var naam = "Toestemming-proef-" + new Date().toISOString().slice(0, 10) + "." + extensie(type);
-    try { bestand = new File([blob], naam, { type: type }); } catch (e) { bestand = blob; bestand.name = naam; }
+    // Chrome op Android laat bij Delen alleen bekende geluidstypes door; audio/mp4 hoort daar niet bij, audio/x-m4a wel.
+    var delenType = /mp4|aac/.test(type) ? "audio/x-m4a" : type;
+    try { bestand = new File([blob], naam, { type: delenType }); } catch (e) { bestand = blob; bestand.name = naam; }
     if (url) URL.revokeObjectURL(url);
     url = URL.createObjectURL(blob);
     $("speler").src = url;
@@ -204,14 +207,20 @@
     try { $("resultaat").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
   }
 
+  function meld(t) { $("deelmelding").textContent = t; status(t); }
+
   $("deel").addEventListener("click", function () {
-    if (navigator.canShare && bestand instanceof File && navigator.canShare({ files: [bestand] })) {
-      navigator.share({ files: [bestand], title: "Toestemmingsopname (proef)" }).then(function () {
-        status("Gedeeld. Verwijder de opname daarna van deze telefoon.");
-      }).catch(function (e) { if (e && e.name !== "AbortError") status("Delen mislukt (" + e.name + "). Gebruik Opslaan als bestand."); });
-    } else {
-      status("Delen met een bestand kan niet op deze telefoon. Gebruik Opslaan als bestand.");
-    }
+    meld("Delen wordt geprobeerd...");
+    if (!navigator.share) { meld("Delen kan niet in deze browser (geen share-functie). Gebruik Opslaan als bestand."); return; }
+    if (!(bestand instanceof File)) { meld("Geen opname gevonden om te delen. Neem eerst op."); return; }
+    var kan = navigator.canShare ? navigator.canShare({ files: [bestand] }) : false;
+    if (!kan) { meld("Delen met dit bestandstype (" + bestand.type + ") kan niet. Gebruik Opslaan als bestand en stuur hem zelf mee in een mail."); return; }
+    navigator.share({ files: [bestand], title: "Toestemmingsopname (proef)", text: "Toestemmingsopname (proef)" }).then(function () {
+      meld("Gedeeld. Verwijder de opname daarna van deze telefoon.");
+    }).catch(function (e) {
+      if (e && e.name === "AbortError") meld("Delen geannuleerd.");
+      else meld("Delen mislukt (" + (e && e.name ? e.name : "onbekend") + (e && e.message ? ": " + e.message : "") + "). Gebruik Opslaan als bestand.");
+    });
   });
   $("bewaar").addEventListener("click", function () {
     var a = document.createElement("a");

@@ -196,15 +196,49 @@
     var type = (mime || "audio/webm").split(";")[0];
     var blob = new Blob(stukken, { type: type });
     var naam = "Toestemming-proef-" + new Date().toISOString().slice(0, 10) + "." + extensie(type);
-    // Chrome op Android laat bij Delen alleen bekende geluidstypes door; audio/mp4 hoort daar niet bij, audio/x-m4a wel.
-    var delenType = /mp4|aac/.test(type) ? "audio/x-m4a" : type;
-    try { bestand = new File([blob], naam, { type: delenType }); } catch (e) { bestand = blob; bestand.name = naam; }
+    var duur = mm((Date.now() - t0) / 1000);
     if (url) URL.revokeObjectURL(url);
     url = URL.createObjectURL(blob);
     $("speler").src = url;
+    bestand = null;
     $("resultaat").classList.remove("verborgen");
-    status("Opname klaar (" + mm((Date.now() - t0) / 1000) + "). Hij staat nog alleen in dit scherm: kies Delen of Opslaan hieronder.");
+    $("deelmelding").textContent = "Opgenomen als " + (mime || "onbekend") + ". Bezig met omzetten naar een bestand dat overal werkt...";
+    status("Opname klaar (" + duur + "). Even wachten, hij wordt omgezet.");
     try { $("resultaat").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
+    // Chrome op Android neemt op als mp4/webm met Opus; WhatsApp en veel mailapps kunnen dat niet verwerken.
+    // Daarom zetten we het om naar WAV (16 kHz, mono): groter bestand, maar speelt overal.
+    naarWav(blob).then(function (w) {
+      var wnaam = naam.replace(/\.[a-z0-9]+$/, ".wav");
+      try { bestand = new File([w], wnaam, { type: "audio/wav" }); } catch (e) { bestand = w; bestand.name = wnaam; }
+      $("deelmelding").textContent = "Klaar: " + wnaam + ", " + Math.round(w.size / 1024) + " kB. Kies Delen of Opslaan.";
+      status("Opname klaar (" + duur + "). Hij staat nog alleen in dit scherm: kies Delen of Opslaan hieronder.");
+    }).catch(function (e) {
+      var delenType = /mp4|aac/.test(type) ? "audio/x-m4a" : type;
+      try { bestand = new File([blob], naam, { type: delenType }); } catch (e2) { bestand = blob; bestand.name = naam; }
+      $("deelmelding").textContent = "Omzetten naar WAV lukte niet (" + (e && e.name ? e.name : "onbekend") + "); het bestand blijft " + type + ". Delen kan dan mislukken.";
+    });
+  }
+
+  function naarWav(blob) {
+    var AC = window.AudioContext || window.webkitAudioContext, OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!AC || !OAC) return Promise.reject(new Error("geen AudioContext"));
+    return blob.arrayBuffer().then(function (buf) {
+      var ac = new AC();
+      return new Promise(function (ok, fout) { ac.decodeAudioData(buf, ok, fout); }).then(function (ab) {
+        try { ac.close(); } catch (e) {}
+        var hz = 16000, oc = new OAC(1, Math.max(1, Math.ceil(ab.duration * hz)), hz), bron = oc.createBufferSource();
+        bron.buffer = ab; bron.connect(oc.destination); bron.start();
+        return oc.startRendering();
+      });
+    }).then(function (r) {
+      var x = r.getChannelData(0), n = x.length, b = new ArrayBuffer(44 + n * 2), v = new DataView(b), i;
+      function s(o, t) { for (var k = 0; k < t.length; k++) v.setUint8(o + k, t.charCodeAt(k)); }
+      s(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); s(8, "WAVE"); s(12, "fmt "); v.setUint32(16, 16, true);
+      v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 16000, true); v.setUint32(28, 32000, true);
+      v.setUint16(32, 2, true); v.setUint16(34, 16, true); s(36, "data"); v.setUint32(40, n * 2, true);
+      for (i = 0; i < n; i++) { var f = Math.max(-1, Math.min(1, x[i])); v.setInt16(44 + i * 2, f < 0 ? f * 32768 : f * 32767, true); }
+      return new Blob([b], { type: "audio/wav" });
+    });
   }
 
   function meld(t) { $("deelmelding").textContent = t; status(t); }
@@ -212,7 +246,7 @@
   $("deel").addEventListener("click", function () {
     meld("Delen wordt geprobeerd...");
     if (!navigator.share) { meld("Delen kan niet in deze browser (geen share-functie). Gebruik Opslaan als bestand."); return; }
-    if (!(bestand instanceof File)) { meld("Geen opname gevonden om te delen. Neem eerst op."); return; }
+    if (!(bestand instanceof File)) { meld("De opname wordt nog omgezet of er is nog niets opgenomen. Probeer het over een paar seconden opnieuw."); return; }
     var kan = navigator.canShare ? navigator.canShare({ files: [bestand] }) : false;
     if (!kan) { meld("Delen met dit bestandstype (" + bestand.type + ") kan niet. Gebruik Opslaan als bestand en stuur hem zelf mee in een mail."); return; }
     navigator.share({ files: [bestand], title: "Toestemmingsopname (proef)", text: "Toestemmingsopname (proef)" }).then(function () {
@@ -223,9 +257,11 @@
     });
   });
   $("bewaar").addEventListener("click", function () {
-    var a = document.createElement("a");
-    a.href = url; a.download = bestand.name; document.body.appendChild(a); a.click(); a.remove();
-    status("Opgeslagen als " + bestand.name + " (kijk bij Downloads of Bestanden).");
+    if (!bestand) { meld("De opname wordt nog omgezet. Probeer het over een paar seconden opnieuw."); return; }
+    var a = document.createElement("a"), u = URL.createObjectURL(bestand);
+    a.href = u; a.download = bestand.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(u); }, 10000);
+    meld("Opgeslagen als " + bestand.name + " (kijk bij Downloads of Bestanden).");
   });
   $("opnieuw").addEventListener("click", function () {
     $("resultaat").classList.add("verborgen"); $("tijd").textContent = "0:00"; status("Klaar om op te nemen.");

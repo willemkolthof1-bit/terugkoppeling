@@ -140,11 +140,11 @@
       <button class="knop stop verborgen" id="opStop" type="button" style="margin-top:12px">Opname stoppen</button>
       <div id="opResultaat" class="verborgen">
         <audio id="opSpeler" controls></audio>
-        <div class="rij" style="margin-bottom:12px"><button class="knop hoofd" id="opDeel" type="button">Mailen aan Willem</button><button class="knop" id="opBewaar" type="button">Opslaan als bestand</button></div>
+        <div class="rij" style="margin-bottom:12px"><button class="knop hoofd" id="opDeel" type="button">Stuur het bestand naar de co&ouml;rdinator</button><button class="knop" id="opBewaar" type="button">Opslaan als bestand</button></div>
         <div id="opmelding"></div>
-        <button class="knop" id="opKopieer" type="button">Mailadres van Willem kopi&euml;ren<small>Plak het bij Aan in je mailapp</small></button>
+        <button class="knop" id="opKopieer" type="button">Mailadres van de co&ouml;rdinator kopi&euml;ren<small>Plak het bij Aan in je mailapp</small></button>
         <button class="knop" id="opOpnieuw" type="button">Opnieuw opnemen</button>
-        <p class="uitleg">Kies bij Mailen je mailapp en stuur de opname naar <b>willem.kolthof@humanitas-noord.nl</b>. Het onderwerp staat er al in. Verwijder de opname daarna van je telefoon.</p>
+        <p class="uitleg">Kies in je mailapp (bijvoorbeeld Gmail) en stuur het bestand naar de co&ouml;rdinator: <b>willem.kolthof@humanitas-noord.nl</b>. Het onderwerp staat er al in. Verwijder de opname daarna van je telefoon.</p>
       </div>
     </div>
 
@@ -312,8 +312,8 @@ function opKlaar() {
   try { $("opResultaat").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
   opNaarWav(blob).then(w => {
     try { op.bestand = new File([w], naam, { type: "audio/wav" }); } catch (e) { op.bestand = w; op.bestand.name = naam; }
-    $("opmelding").textContent = "Klaar: " + naam + ", " + Math.round(w.size / 1024) + " kB. Kies Mailen aan Willem of Opslaan als bestand.";
-    opStatus("Opname klaar (" + duur + "). Hij staat nog alleen op dit scherm: mail hem aan Willem of sla hem op.");
+    $("opmelding").textContent = "Klaar: " + naam + ", " + Math.round(w.size / 1024) + " kB. Kies Stuur het bestand naar de coördinator of Opslaan als bestand.";
+    opStatus("Opname klaar (" + duur + "). Hij staat nog alleen op dit scherm: stuur hem naar de coördinator of sla hem op.");
   }).catch(e => {
     $("opmelding").textContent = "Omzetten lukte niet (" + (e && e.name ? e.name : "onbekend") + "). Neem de opname opnieuw op, of laat de deelnemer op papier tekenen.";
   });
@@ -346,15 +346,15 @@ $("opStop").onclick = () => {
 };
 $("opDeel").onclick = () => {
   opMeld("Delen wordt geprobeerd...");
-  if (!navigator.share) { opMeld("Mailen kan niet in deze browser. Gebruik Opslaan als bestand en mail het bestand zelf aan Willem."); return; }
+  if (!navigator.share) { opMeld("Mailen kan niet in deze browser. Gebruik Opslaan als bestand en mail het bestand zelf aan de coördinator."); return; }
   if (!(op.bestand instanceof File)) { opMeld("De opname wordt nog omgezet of er is nog niets opgenomen. Probeer het over een paar seconden opnieuw."); return; }
-  if (!(navigator.canShare && navigator.canShare({ files: [op.bestand] }))) { opMeld("Delen met dit bestandstype kan niet. Gebruik Opslaan als bestand en mail het bestand zelf aan Willem."); return; }
+  if (!(navigator.canShare && navigator.canShare({ files: [op.bestand] }))) { opMeld("Delen met dit bestandstype kan niet. Gebruik Opslaan als bestand en mail het bestand zelf aan de coördinator."); return; }
   const titel = "Toestemmingsopname - Ref " + op.hv;
   navigator.share({ files: [op.bestand], title: titel, text: titel }).then(() => {
-    opMeld("Gedeeld. Staat de mail aan Willem verzonden? Verwijder de opname dan van deze telefoon.");
+    opMeld("Gedeeld. Is de mail aan de coördinator verzonden? Verwijder de opname dan van deze telefoon.");
   }).catch(e => {
     if (e && e.name === "AbortError") opMeld("Delen geannuleerd.");
-    else opMeld("Delen mislukt (" + (e && e.name ? e.name : "onbekend") + "). Gebruik Opslaan als bestand en mail het zelf aan Willem.");
+    else opMeld("Delen mislukt (" + (e && e.name ? e.name : "onbekend") + "). Gebruik Opslaan als bestand en mail het zelf aan de coördinator.");
   });
 };
 $("opKopieer").onclick = () => {
@@ -368,7 +368,7 @@ $("opBewaar").onclick = () => {
   const u = URL.createObjectURL(op.bestand), a = document.createElement("a");
   a.href = u; a.download = op.bestand.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(u), 10000);
-  opMeld("Opgeslagen als " + op.bestand.name + " (kijk bij Downloads of Bestanden). Mail dit bestand aan Willem, met " + op.hv + " in het onderwerp.");
+  opMeld("Opgeslagen als " + op.bestand.name + " (kijk bij Downloads of Bestanden). Mail dit bestand aan de coördinator, met " + op.hv + " in het onderwerp.");
 };
 
 // ---- vaste link (v3): de link bevat alleen een token; de lijst staat versleuteld in data/<token>.json ----

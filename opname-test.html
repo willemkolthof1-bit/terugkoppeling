@@ -23,14 +23,21 @@
   .tekst p { margin:0 0 12px; }
   .tekst p:last-child { margin-bottom:0; }
   .wie { font-size:14px; font-weight:700; color:var(--groen); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px !important; }
-  .opname { background:var(--geel); border:1px solid #ecd98f; border-radius:12px; padding:14px 16px; margin:12px 0; font-size:15px; }
+  .deel { border-radius:14px; padding:14px 14px 16px; margin:22px 0 0; }
+  .deel h3 { margin:0 0 4px; font-size:20px; }
+  .deel .uitleg { margin:0 0 12px; font-size:15px; }
+  .zonder { background:#eceff0; border:2px dashed #9aa6a6; }
+  .zonder h3 { color:#3f4a4a; }
+  .met { background:#fdeeee; border:2px solid var(--rood); }
+  .met h3 { color:var(--rood); }
   .knop { display:block; width:100%; background:#fff; border:1px solid var(--rand); border-radius:12px; padding:16px; margin:0 0 12px; font-size:19px; color:var(--tekst); cursor:pointer; font-family:inherit; text-align:center; }
   .knop:active { background:#e6f1f0; }
   .hoofd { background:var(--groen); color:#fff; border:none; font-weight:600; }
   .stop { background:var(--rood); color:#fff; border:none; font-weight:600; }
   .knop[disabled] { opacity:.45; }
-  #tijd { font-size:44px; text-align:center; font-variant-numeric:tabular-nums; margin:8px 0; }
-  #status { text-align:center; color:var(--zacht); min-height:1.4em; margin-bottom:8px; }
+  .balk { position:sticky; top:0; z-index:5; background:#fdeeee; padding:6px 0 2px; }
+  #tijd { font-size:36px; text-align:center; font-variant-numeric:tabular-nums; margin:0; }
+  #status { text-align:center; color:var(--zacht); min-height:1.4em; margin:0 0 8px; font-size:15px; }
   audio { width:100%; margin:0 0 12px; }
   #diag { font-size:14px; color:var(--zacht); background:#fff; border:1px solid var(--rand); border-radius:12px; padding:12px 14px; word-break:break-word; }
   .verborgen { display:none; }
@@ -42,42 +49,59 @@
   <p>Alleen om te testen. De opname blijft op je telefoon en gaat nergens heen tot jij hem deelt.</p>
 </header>
 <main>
-  <h2>Gegevens voor de tekst</h2>
+  <h2>Gegevens voor de tekst (alleen in de proef invullen)</h2>
   <label for="vw">Naam vrijwilliger</label>
   <input id="vw" value="Willem" autocomplete="off">
   <label for="dn">Naam deelnemer</label>
   <input id="dn" value="Proefdeelnemer" autocomplete="off">
 
-  <h2>Tekst om voor te lezen</h2>
-  <div class="tekst">
-    <p class="wie">Eerst, zonder opname</p>
-    <p>Mijn naam is <b class="vwn"></b> en ik ben vrijwilliger bij Humanitas Thuisadministratie. U heeft informatie ontvangen over hoe Humanitas met uw persoonsgegevens omgaat. Mag ik dit gesprek opnemen om uw toestemming vast te leggen?</p>
-    <p class="wie">Als de deelnemer ja zegt: start de opname</p>
-    <p>Vandaag is het <b class="dat"></b>. Mijn naam is <b class="vwn"></b>, vrijwilliger bij Humanitas Thuisadministratie. Ik spreek met <b class="dnn"></b>.</p>
-    <p>Gaat u ermee akkoord dat we dit gesprek opnemen om uw toestemming vast te leggen?</p>
-    <p class="wie">Deelnemer</p>
-    <p>"Ja, daar ga ik mee akkoord."</p>
-    <p class="wie">Vrijwilliger</p>
-    <p>Geeft u vrijwillig toestemming aan Humanitas om uw persoonsgegevens voor de begeleiding bij de Thuisadministratie te verwerken en, voor zover daarvoor uw toestemming nodig is, vast te leggen in HRS, zoals uitgelegd in de informatie die u heeft ontvangen?</p>
-    <p class="wie">Deelnemer</p>
-    <p>"Ja, daar geef ik toestemming voor."</p>
-    <p class="wie">Vrijwilliger</p>
-    <p>Dank u wel. Hiermee is uw mondelinge toestemming vastgelegd.</p>
+  <div class="deel zonder">
+    <h3>Deel 1: zonder opname</h3>
+    <p class="uitleg">Lees dit eerst voor. Er wordt nog niets opgenomen.</p>
+    <div class="tekst">
+      <p class="wie">Vrijwilliger</p>
+      <p>Mijn naam is <b class="vwn"></b> en ik ben vrijwilliger bij Humanitas Thuisadministratie. Ik spreek met <b class="dnn"></b>.</p>
+      <p>U heeft informatie ontvangen over hoe Humanitas met uw persoonsgegevens omgaat.</p>
+      <p>Humanitas gebruikt uw gegevens om u te kunnen begeleiden bij uw thuisadministratie. De gegevens die daarvoor nodig zijn, worden vastgelegd in HRS en in ons eigen beveiligde systeem voor de Thuisadministratie.</p>
+      <p>U heeft het recht om te vragen welke gegevens van u zijn vastgelegd en om uw toestemming weer in te trekken.</p>
+      <p>Voordat we verdergaan, wil ik u vragen of u ermee akkoord gaat dat we het volgende deel opnemen om uw toestemming vast te leggen.</p>
+      <p class="wie">Deelnemer</p>
+      <p>"Ja, daar ga ik mee akkoord."</p>
+    </div>
   </div>
-  <div class="opname">Dit is een proefversie van de tekst: de opname begint hier bij "Vandaag is het", zodat datum en namen op de opname staan.</div>
 
-  <h2>Opnemen</h2>
-  <div id="tijd">0:00</div>
-  <div id="status">Klaar om op te nemen.</div>
-  <button class="knop hoofd" id="start">Opname starten</button>
-  <button class="knop stop verborgen" id="stop">Opname stoppen</button>
+  <div class="deel met">
+    <h3>Deel 2: met opname</h3>
+    <p class="uitleg">Druk eerst op <b>Opname starten</b>. Lees daarna de tekst hieronder voor. Stop de opname aan het eind.</p>
 
-  <div id="resultaat" class="verborgen">
-    <h2>Beluisteren en versturen</h2>
-    <audio id="speler" controls></audio>
-    <button class="knop hoofd" id="deel">Delen (mail, WhatsApp, ...)</button>
-    <button class="knop" id="bewaar">Opslaan als bestand</button>
-    <button class="knop" id="opnieuw">Opnieuw opnemen</button>
+    <div class="balk">
+      <div id="tijd">0:00</div>
+      <div id="status">Klaar om op te nemen.</div>
+      <button class="knop hoofd" id="start">Opname starten</button>
+      <button class="knop stop verborgen" id="stop">Opname stoppen</button>
+    </div>
+
+    <div id="resultaat" class="verborgen">
+      <audio id="speler" controls></audio>
+      <button class="knop hoofd" id="deel">Delen (mail, WhatsApp, ...)</button>
+      <button class="knop" id="bewaar">Opslaan als bestand</button>
+      <button class="knop" id="opnieuw">Opnieuw opnemen</button>
+    </div>
+
+    <div class="tekst">
+      <p class="wie">Vrijwilliger</p>
+      <p>Vandaag is het <b class="dat"></b>. Mijn naam is <b class="vwn"></b>, vrijwilliger bij Humanitas Thuisadministratie. Ik spreek met <b class="dnn"></b>.</p>
+      <p>Gaat u ermee akkoord dat we dit gesprek opnemen om uw toestemming vast te leggen?</p>
+      <p class="wie">Deelnemer</p>
+      <p>"Ja, daar ga ik mee akkoord."</p>
+      <p class="wie">Vrijwilliger</p>
+      <p>Geeft u vrijwillig toestemming aan Humanitas om uw persoonsgegevens voor de begeleiding bij de Thuisadministratie te verwerken en, voor zover daarvoor uw toestemming nodig is, vast te leggen in HRS en in ons eigen beveiligde systeem, zoals uitgelegd in de informatie die u heeft ontvangen?</p>
+      <p class="wie">Deelnemer</p>
+      <p>"Ja, daar geef ik toestemming voor."</p>
+      <p class="wie">Vrijwilliger</p>
+      <p>Dank u wel. Hiermee is uw mondelinge toestemming vastgelegd.</p>
+      <p class="wie">Stop daarna de opname</p>
+    </div>
   </div>
 
   <h2>Wat deze telefoon kan</h2>
@@ -87,6 +111,13 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var rec = null, stukken = [], stream = null, bestand = null, url = null, t0 = 0, timer = null, mime = "";
+
+  // De namen kunnen in de link meegegeven worden: ?vw=Willem&dn=Proefdeelnemer
+  try {
+    var p = new URLSearchParams(location.search);
+    if (p.get("vw")) $("vw").value = p.get("vw").slice(0, 60);
+    if (p.get("dn")) $("dn").value = p.get("dn").slice(0, 60);
+  } catch (e) {}
 
   function datumTekst() {
     return new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
@@ -144,7 +175,7 @@
       timer = setInterval(function () { $("tijd").textContent = mm((Date.now() - t0) / 1000); }, 250);
       $("start").classList.add("verborgen"); $("stop").classList.remove("verborgen");
       $("resultaat").classList.add("verborgen");
-      status("Er wordt opgenomen...");
+      status("Er wordt opgenomen... lees nu de tekst voor.");
     }).catch(function (e) {
       status("Geen toegang tot de microfoon (" + (e && e.name ? e.name : "onbekend") + "). Sta de microfoon toe voor deze pagina en probeer opnieuw.");
     });
@@ -166,7 +197,8 @@
     url = URL.createObjectURL(blob);
     $("speler").src = url;
     $("resultaat").classList.remove("verborgen");
-    status("Opname klaar: " + mm((Date.now() - t0) / 1000) + ", " + Math.round(blob.size / 1024) + " kB, " + naam);
+    status("Opname klaar (" + mm((Date.now() - t0) / 1000) + "). Hij staat nog alleen in dit scherm: kies Delen of Opslaan hieronder.");
+    try { $("resultaat").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
   }
 
   $("deel").addEventListener("click", function () {

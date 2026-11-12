@@ -51,6 +51,11 @@
   #opstatus { text-align:center; color:var(--zacht); min-height:1.4em; margin:0 0 8px; font-size:15px; }
   #opmelding { font-size:15px; color:#3f4a4a; margin:-4px 0 12px; min-height:1.3em; word-break:break-word; }
   audio { width:100%; margin:0 0 12px; }
+  .klein { display:block; margin:-6px 0 12px; background:none; border:none; color:#b3261e; font-size:15px; text-decoration:underline; cursor:pointer; font-family:inherit; padding:6px 4px; }
+  .afstand { display:block; color:var(--zacht); font-size:14px; margin:-8px 0 12px 4px; }
+  .keuzes label { display:block; background:#fff; border:1px solid var(--rand); border-radius:12px; padding:14px 14px; margin:0 0 8px; font-size:18px; }
+  .keuzes input { width:auto; margin:0 10px 0 0; }
+  textarea { width:100%; font-size:18px; padding:12px; border:1px solid var(--rand); border-radius:12px; font-family:inherit; }
   .tekort { display:block; color:#8a5a00; font-size:14px; margin-top:2px; }
 </style>
 </head>
@@ -88,12 +93,39 @@
     <p>Deze app kent je gegevens nog niet.</p>
     <p class="uitleg">Open de app-link uit de mail van Willem, dan staan je gegevens erin.</p>
   </section>
+  <section id="afmeld" class="verborgen">
+    <button class="knop" id="afTerug" type="button">&larr; Terug naar de lijst</button>
+    <h2>Deelnemer afmelden: <span id="afNaam"></span></h2>
+    <p class="uitleg">Je geeft door dat het traject met deze deelnemer stopt. Willem kijkt mee en regelt de afhandeling; er wordt niets meteen gesloten.</p>
+    <div id="afForm">
+      <p class="uitleg" style="margin-bottom:0">Datum van afmelden</p>
+      <input id="afDatum" type="date">
+      <p class="uitleg" style="margin-bottom:6px">Reden</p>
+      <div class="keuzes">
+        <label><input type="radio" name="afReden" value="De deelnemer wil stoppen">De deelnemer wil stoppen</label>
+        <label><input type="radio" name="afReden" value="Geen contact meer">Geen contact meer</label>
+        <label><input type="radio" name="afReden" value="Hulp is niet meer nodig">Hulp is niet meer nodig</label>
+        <label><input type="radio" name="afReden" value="Verhuisd">Verhuisd</label>
+        <label><input type="radio" name="afReden" value="Anders (zie mail of WhatsApp)">Anders (zie mail of WhatsApp)</label>
+      </div>
+      <p class="uitleg" style="margin-bottom:6px">Toelichting (mag leeg)</p>
+      <textarea id="afToelichting" rows="3"></textarea>
+      <label style="display:block;margin:14px 0"><input type="checkbox" id="afBesproken" style="width:auto;margin:0 8px 0 0">Ik heb dit met de deelnemer besproken</label>
+      <button class="knop stop verborgen" id="afFormulier" type="button">Afmelding doorgeven<small style="color:#ffd9d6">Het formulier opent met alles al ingevuld: tik daar op Verzenden. Je hoeft dan niets te mailen.</small></button>
+      <button class="knop stop" id="afMail" type="button">Afmelding doorgeven per mail<small style="color:#ffd9d6">Je mailapp opent met een kant-en-klare mail aan Willem; verstuur die zelf</small></button>
+      <p class="fout" id="afFout"></p>
+    </div>
+    <div id="afKlaar" class="verborgen">
+      <p class="kaart"><b>Bijna klaar.</b><br>Je mailapp is geopend. <b style="display:inline">Verstuur de mail</b>, dan weet Willem het. De deelnemer blijft in je lijst staan tot de afhandeling klaar is.</p>
+    </div>
+  </section>
   <section id="opname" class="verborgen">
     <button class="knop" id="opTerug" type="button">&larr; Terug naar de lijst</button>
     <h2>Toestemming vastleggen: <span id="opNaam"></span></h2>
     <p class="uitleg">Voor deze deelnemer is nog geen toestemmingsverklaring binnen. Kies hoe de toestemming wordt vastgelegd.</p>
     <div id="opKeuze">
       <button class="knop hoofd" id="opKiesOpname" type="button">Mondeling akkoord opnemen<small>De deelnemer geeft mondeling toestemming; je neemt dat op met je telefoon</small></button>
+      <a class="knop" id="opOverslaan">Ik leg de toestemming later vast<small>Overslaan: ga direct verder naar de terugkoppeling.</small></a>
       <a class="knop" id="opKiesTekenen">Een getekende verklaring<small>De deelnemer tekent de verklaring, zoals altijd. Ga verder naar de terugkoppeling.</small></a>
     </div>
     <div id="opWerk" class="verborgen">
@@ -164,6 +196,10 @@ const FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT_kj
 const VRAAG_VW = "r250150172a6b454fae636bc9e1d45795";
 const VRAAG_DN = "r7d4b6d8d128d4a86a00713abaf3233a6";
 const PROFIEL = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT_kjkON_ReWy6tcrBlZnAibi_dHjyEahgqTJAlUMlhBNFEzTUxOR0cxREFWVFRIMlNBV1FOUS4u";
+// Afmelden: per mail aan Willem, of via een Forms-formulier zodra die link hieronder is ingevuld (leeg = alleen per mail)
+const AFMELD_MAIL = "willem.kolthof@humanitas-noord.nl";
+let AFMELD_FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT_kjkON_ReWy6tcrBlZnAibi_dHjyEahgqTJAlURUlERlNFWFVRTkxBMzc1MjBQVjFPSDY2Ny4u";
+let AFMELD_VW = "ra78933e14df6455288767c62ede9f006", AFMELD_DN = "rcfa2d57fd95a4245b631d46f889f1d5e", AFMELD_DATUM = "r965e0889e29247f6b778067819b8818b", AFMELD_REDEN = "r19e3758048c54ca99ff6b475d723ae58", AFMELD_TOEL = "rc73f1635416b498f8216a1482e6d2f6e", AFMELD_BESPROKEN = "r17b837caf6d54dd1ac2430905a8129a5";
 const $ = id => document.getElementById(id);
 function lees(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function schrijf(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -185,7 +221,7 @@ async function sha(s) {
   return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join("");
 }
 
-function toon(id) { ["slot", "lijst", "leeg", "opname"].forEach(s => $(s).classList.toggle("verborgen", s !== id)); }
+function toon(id) { ["slot", "lijst", "leeg", "opname", "afmeld"].forEach(s => $(s).classList.toggle("verborgen", s !== id)); }
 
 function voornaam(v) { return String(v).trim().split(" ")[0]; }
 
@@ -230,7 +266,14 @@ function zoekAnder(g, tekst) {
 function lijst(g) {
   $("wie").textContent = g.v;
   const box = $("deelnemers"); box.innerHTML = "";
-  g.d.forEach(dn => box.append(deelnemerKnop(g, dn, true)));
+  afOpruimen(g);   // de melding op deze telefoon vervalt als de deelnemer niet meer in de lijst staat (verwerkt in Excel) of na 3 weken
+  g.d.forEach(dn => {
+    box.append(deelnemerKnop(g, dn, true));
+    const doorgegeven = lees("tk_afm:" + dn);
+    if (doorgegeven) { const s = document.createElement("span"); s.className = "afstand"; s.textContent = "Afmelding klaargezet op " + afNl(doorgegeven); box.append(s); }
+    const b = document.createElement("button"); b.type = "button"; b.className = "klein"; b.textContent = "Afmelden";
+    b.onclick = () => toonAfmeld(g, dn); box.append(b);
+  });
   // deelnemer die niet in het lijstje staat: voornaam of HV-nummer intikken; de app zoekt alleen onder bekende deelnemers
   // (eigen, nog niet gekoppelde en recent losgekoppelde) en toont het HV-nummer uit Excel. Nieuwe deelnemers worden hier niet ingevoerd.
   $("andereKnop").onclick = () => { $("andereBlok").classList.remove("verborgen"); $("andereKnop").classList.add("verborgen"); $("andereNaam").focus(); };
@@ -241,6 +284,64 @@ function lijst(g) {
   if (g.p === 0) { $("profiel").href = PROFIEL; $("profiel").classList.remove("verborgen"); }
   toon("lijst");
 }
+
+// ---- deelnemer afmelden: per mail aan Willem (of via het formulier); er gaat niets automatisch weg ----
+const af = { g: null, dn: "" };
+function afVandaag() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function afNl(iso) { const p = String(iso).split("-"); return p.length === 3 ? p[2] + "-" + p[1] + "-" + p[0] : iso; }
+function afOpruimen(g) {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf("tk_afm:") === 0) {
+        const d = new Date(localStorage.getItem(k));
+        if (g.d.indexOf(k.slice(7)) < 0 || isNaN(d) || (Date.now() - d) > 21 * 86400000) localStorage.removeItem(k);
+      }
+    }
+  } catch (e) {}
+}
+function toonAfmeld(g, dn) {
+  af.g = g; af.dn = dn;
+  $("afNaam").textContent = dn.split(" - Ref ")[0];
+  $("afDatum").value = afVandaag();
+  $("afFout").textContent = ""; $("afKlaar").classList.add("verborgen"); $("afForm").classList.remove("verborgen");
+  [].forEach.call(document.getElementsByName("afReden"), r => { r.checked = false; });
+  $("afBesproken").checked = false; $("afToelichting").value = "";
+  $("afFormulier").classList.toggle("verborgen", !AFMELD_FORM);
+  // met een formulier is de mail een keuze (bijvoorbeeld om meer uit te leggen); zonder formulier is de mail de enige route
+  if (AFMELD_FORM) { $("afMail").className = "knop"; $("afMail").innerHTML = "Liever per mail<small>Bijvoorbeeld als je meer wilt uitleggen. Je mailapp opent met een kant-en-klare mail aan Willem; verstuur die zelf.</small>"; }
+  else { $("afMail").className = "knop stop"; $("afMail").innerHTML = 'Afmelding doorgeven per mail<small style="color:#ffd9d6">Je mailapp opent met een kant-en-klare mail aan Willem; verstuur die zelf</small>'; }
+  toon("afmeld"); window.scrollTo(0, 0);
+}
+function afGegevens() {
+  const r = [].filter.call(document.getElementsByName("afReden"), x => x.checked)[0];
+  if (!r) { $("afFout").textContent = "Kies eerst een reden."; return null; }
+  if (!$("afBesproken").checked) { $("afFout").textContent = "Vink aan dat je dit met de deelnemer hebt besproken."; return null; }
+  if (!$("afDatum").value) { $("afFout").textContent = "Vul de datum van afmelden in."; return null; }
+  $("afFout").textContent = "";
+  return { reden: r.value, datum: afNl($("afDatum").value), toel: $("afToelichting").value.trim() };
+}
+function afKlaarZetten() { schrijf("tk_afm:" + af.dn, afVandaag()); $("afForm").classList.add("verborgen"); $("afKlaar").classList.remove("verborgen"); }
+$("afTerug").onclick = () => { lijst(af.g); };
+$("afMail").onclick = () => {
+  const x = afGegevens(); if (!x) return;
+  const p = af.dn.split(" - Ref "), hv = p[1] || "";
+  const onderwerp = "Afmelden deelnemer - Ref " + hv + " (" + p[0] + ")";
+  const tekst = "Vrijwilliger: " + af.g.v + "\nDeelnemer: " + af.dn + "\nDatum afmelden: " + x.datum + "\nReden: " + x.reden + "\nToelichting: " + x.toel + "\nBesproken met deelnemer: ja\n";
+  const url = "mailto:" + AFMELD_MAIL + "?subject=" + encodeURIComponent(onderwerp) + "&body=" + encodeURIComponent(tekst);
+  window.__laatsteMail = url;
+  afKlaarZetten();
+  if (!window.__geenMailto) location.href = url;
+};
+$("afFormulier").onclick = () => {
+  const x = afGegevens(); if (!x || !AFMELD_FORM) return;
+  let u = AFMELD_FORM;
+  const veld = (k, v) => { if (k) u += "&" + k + "=" + encodeURIComponent(v); };
+  veld(AFMELD_VW, af.g.v); veld(AFMELD_DN, af.dn); veld(AFMELD_DATUM, x.datum); veld(AFMELD_REDEN, '"' + x.reden + '"'); veld(AFMELD_TOEL, x.toel); veld(AFMELD_BESPROKEN, '"Ja"');   // keuzevragen verwachten de tekst tussen aanhalingstekens
+  window.__laatsteForm = u;
+  schrijf("tk_afm:" + af.dn, afVandaag());
+  if (!window.__geenMailto) location.href = u;
+};
 
 // ---- toestemming mondeling vastleggen: opname op de telefoon, daarna zelf mailen (er gaat niets naar een server) ----
 const op = { g: null, dn: "", hv: "", rec: null, stukken: [], stream: null, bestand: null, url: null, t0: 0, timer: null, mime: "" };
@@ -272,6 +373,7 @@ function toonOpname(g, dn) {
   [].forEach.call(document.querySelectorAll(".ophv"), e => { e.textContent = op.hv || "(nummer ontbreekt)"; });
   $("opVerder").href = formLink(g.v, dn);
   $("opKiesTekenen").href = formLink(g.v, dn);
+  $("opOverslaan").href = formLink(g.v, dn);
   $("opKeuze").classList.remove("verborgen"); $("opWerk").classList.add("verborgen");
   opReset(); toon("opname"); window.scrollTo(0, 0);
 }

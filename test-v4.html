@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="apple-mobile-web-app-title" content="Thuisadministratie">
+<meta name="theme-color" content="#00706b">
+<link rel="icon" href="icoon.png">
+<link rel="apple-touch-icon" href="icoon.png">
+<title>Thuisadministratie</title>
+<style>
+  :root { --groen:#00706b; --tekst:#1d1d1d; --zacht:#5f6b6b; --rand:#d5dede; --bg:#f4f8f8; --geel:#fff6d6; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system, "Segoe UI", Roboto, Arial, sans-serif; background:var(--bg); color:var(--tekst); font-size:18px; }
+  header { background:var(--groen); color:#fff; padding:18px 16px; }
+  header h1 { margin:0; font-size:22px; }
+  header p { margin:4px 0 0; font-size:15px; opacity:.9; }
+  main { padding:16px; max-width:520px; margin:0 auto; }
+  h2 { font-size:17px; margin:22px 0 10px; color:var(--zacht); font-weight:600; }
+  .knop { display:block; width:100%; text-align:left; background:#fff; border:1px solid var(--rand); border-radius:12px; padding:18px 16px; margin:0 0 12px; font-size:19px; color:var(--tekst); text-decoration:none; cursor:pointer; font-family:inherit; }
+  .knop small { display:block; color:var(--zacht); font-size:14px; margin-top:2px; }
+  .knop:active { background:#e6f1f0; }
+  .hoofd { background:var(--groen); color:#fff; border:none; text-align:center; font-weight:600; }
+  .hoofd small { color:#dff1ef; font-weight:400; }
+  .kaart.plak b { display:inline; }
+  .kaart { background:var(--geel); border:1px solid #ecd98f; border-radius:12px; padding:14px 16px; margin:0 0 12px; }
+  .kaart b { display:block; }
+  .kaart .doel { color:var(--zacht); font-size:15px; margin:4px 0 12px; }
+  .rij { display:flex; gap:10px; }
+  .rij .knop { margin:0; text-align:center; padding:14px 8px; font-size:17px; }
+  .klaar { color:var(--groen); font-size:15px; margin:8px 0 0; }
+  input { width:100%; font-size:20px; padding:14px; border:1px solid var(--rand); border-radius:12px; margin:8px 0 12px; }
+  .fout { color:#b00020; min-height:1.4em; font-size:16px; }
+  .uitleg { color:var(--zacht); font-size:15px; line-height:1.45; }
+  .verborgen { display:none; }
+  .tekst { background:#fff; border:1px solid var(--rand); border-radius:12px; padding:14px 16px; line-height:1.45; font-size:18px; }
+  .tekst p { margin:0 0 12px; }
+  .tekst p:last-child { margin-bottom:0; }
+  .wie { font-size:14px; font-weight:700; color:var(--groen); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px !important; }
+  .deel { border-radius:14px; padding:14px 14px 16px; margin:18px 0 0; }
+  .deel h3 { margin:0 0 4px; font-size:20px; }
+  .deel .uitleg { margin:0 0 12px; }
+  .zonder { background:#eceff0; border:2px dashed #9aa6a6; }
+  .met { background:#fdeeee; border:2px solid #b3261e; }
+  .met h3 { color:#b3261e; }
+  .stop { background:#b3261e; color:#fff; border:none; font-weight:600; text-align:center; }
+  .balk { position:sticky; top:0; z-index:5; background:#fdeeee; padding:6px 0 2px; }
+  #optijd { font-size:36px; text-align:center; font-variant-numeric:tabular-nums; margin:0; }
+  #opstatus { text-align:center; color:var(--zacht); min-height:1.4em; margin:0 0 8px; font-size:15px; }
+  #opmelding { font-size:15px; color:#3f4a4a; margin:-4px 0 12px; min-height:1.3em; word-break:break-word; }
+  audio { width:100%; margin:0 0 12px; }
+  .klein { display:block; margin:-6px 0 12px; background:none; border:none; color:#b3261e; font-size:15px; text-decoration:underline; cursor:pointer; font-family:inherit; padding:6px 4px; }
+  .afstand { display:block; color:var(--zacht); font-size:14px; margin:-8px 0 12px 4px; }
+  .keuzes label { display:block; background:#fff; border:1px solid var(--rand); border-radius:12px; padding:14px 14px; margin:0 0 8px; font-size:18px; }
+  .keuzes input { width:auto; margin:0 10px 0 0; }
+  textarea { width:100%; font-size:18px; padding:12px; border:1px solid var(--rand); border-radius:12px; font-family:inherit; }
+  .tekort { display:block; color:#8a5a00; font-size:14px; margin-top:2px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Thuisadministratie</h1>
+  <p id="wie">Humanitas Tynaarlo</p>
+</header>
+<main>
+  <section id="slot" class="verborgen">
+    <p>Vul het wachtwoord in. Je krijgt het van Willem.</p>
+    <input id="ww" type="password" autocomplete="off" inputmode="text" aria-label="Wachtwoord">
+    <button class="knop hoofd" id="open">Openen</button>
+    <p class="fout" id="fout"></p>
+  </section>
+  <section id="lijst" class="verborgen">
+    <div id="tkblok">
+      <h2>Terugkoppeling: over wie wil je iets doorgeven?</h2>
+      <div id="deelnemers"></div>
+      <button class="knop" id="andereKnop" type="button">Andere deelnemer&hellip;<small>Staat hij of zij er niet bij? Typ de voornaam of het nummer (HV-&hellip;). Alleen deelnemers die al in Excel staan.</small></button>
+      <div id="andereBlok" class="verborgen">
+        <input id="andereNaam" type="text" autocomplete="off" aria-label="Voornaam of HV-nummer van de deelnemer" placeholder="Voornaam of HV-nummer">
+        <button class="knop hoofd" id="andereGo" type="button">Zoeken</button>
+        <div id="andereUitslag"></div>
+      </div>
+    </div>
+    <h2>Handig</h2>
+    <a class="knop verborgen" id="profiel" target="_blank" rel="noopener">Mijn vrijwilligersprofiel invullen<small>Nog niet ingevuld: daarmee krijg je hulpvragen die bij je passen</small></a>
+    <a class="knop" href="werkwijze.pdf" target="_blank" rel="noopener">Hoe werkt het?<small>Werkwijze nieuwe hulpvraag (pdf)</small></a>
+    <p class="uitleg" id="bijgewerkt"></p>
+    <p class="uitleg">Nieuwe hulpvragen krijg je per mail. Reageer met Beantwoorden en laat het nummer HV-&hellip; in het onderwerp staan.</p>
+    <p class="uitleg">Is er echt iets aan de hand? Mail of bel Willem: 06 17187589.</p>
+  </section>
+  <section id="leeg" class="verborgen">
+    <p>Deze app kent je gegevens nog niet.</p>
+    <p class="uitleg">Open de app-link uit de mail van Willem, dan staan je gegevens erin.</p>
+  </section>
+  <section id="afmeld" class="verborgen">
+    <button class="knop" id="afTerug" type="button">&larr; Terug naar de lijst</button>
+    <h2>Deelnemer afmelden: <span id="afNaam"></span></h2>
+    <p class="uitleg">Je geeft door dat het traject met deze deelnemer stopt. Willem kijkt mee en regelt de afhandeling; er wordt niets meteen gesloten.</p>
+    <div id="afForm">
+      <p class="uitleg" style="margin-bottom:0">Datum van afmelden</p>
+      <input id="afDatum" type="date">
+      <p class="uitleg" style="margin-bottom:6px">Reden</p>
+      <div class="keuzes">
+        <label><input type="radio" name="afReden" value="De deelnemer wil stoppen">De deelnemer wil stoppen</label>
+        <label><input type="radio" name="afReden" value="Geen contact meer">Geen contact meer</label>
+        <label><input type="radio" name="afReden" value="Hulp is niet meer nodig">Hulp is niet meer nodig</label>
+        <label><input type="radio" name="afReden" value="Verhuisd">Verhuisd</label>
+        <label><input type="radio" name="afReden" value="Anders (zie mail of WhatsApp)">Anders (zie mail of WhatsApp)</label>
+      </div>
+      <p class="uitleg" style="margin-bottom:6px">Toelichting (mag leeg)</p>
+      <textarea id="afToelichting" rows="3"></textarea>
+      <label style="display:block;margin:14px 0"><input type="checkbox" id="afBesproken" style="width:auto;margin:0 8px 0 0">Ik heb dit met de deelnemer besproken</label>
+      <button class="knop stop verborgen" id="afFormulier" type="button">Afmelding doorgeven<small style="color:#ffd9d6">Het formulier opent met alles al ingevuld: tik daar op Verzenden. Je hoeft dan niets te mailen.</small></button>
+      <button class="knop stop" id="afMail" type="button">Afmelding doorgeven per mail<small style="color:#ffd9d6">Je mailapp opent met een kant-en-klare mail aan Willem; verstuur die zelf</small></button>
+      <p class="fout" id="afFout"></p>
+    </div>
+    <div id="afKlaar" class="verborgen">
+      <p class="kaart"><b>Bijna klaar.</b><br>Je mailapp is geopend. <b style="display:inline">Verstuur de mail</b>, dan weet Willem het. De deelnemer blijft in je lijst staan tot de afhandeling klaar is.</p>
+    </div>
+  </section>
+  <section id="opname" class="verborgen">
+    <button class="knop" id="opTerug" type="button">&larr; Terug naar de lijst</button>
+    <h2>Toestemming vastleggen: <span id="opNaam"></span></h2>
+    <p class="uitleg">Voor deze deelnemer is nog geen toestemmingsverklaring binnen. Kies hoe de toestemming wordt vastgelegd.</p>
+    <div id="opKeuze">
+      <button class="knop hoofd" id="opKiesOpname" type="button">Mondeling akkoord opnemen<small>De deelnemer geeft mondeling toestemming; je neemt dat op met je telefoon</small></button>
+      <a class="knop" id="opOverslaan">Ik leg de toestemming later vast<small>Overslaan: ga direct verder naar de terugkoppeling.</small></a>
+      <a class="knop" id="opKiesTekenen">Een getekende verklaring<small>De deelnemer tekent de verklaring, zoals altijd. Ga verder naar de terugkoppeling.</small></a>
+    </div>
+    <div id="opWerk" class="verborgen">
+    <p class="uitleg">Liever toch een getekende verklaring? Ga dan onderaan gewoon verder naar de terugkoppeling.</p>
+
+    <div class="deel zonder">
+      <h3>Deel 1: zonder opname</h3>
+      <p class="uitleg">Lees dit eerst voor. Er wordt nog niets opgenomen.</p>
+      <div class="tekst">
+        <p class="wie">Vrijwilliger</p>
+        <p>U heeft informatie ontvangen over hoe Humanitas met uw persoonsgegevens omgaat.</p>
+        <p>Humanitas gebruikt uw gegevens om u te kunnen begeleiden bij uw thuisadministratie. De gegevens die daarvoor nodig zijn, worden vastgelegd in HRS, het administratiesysteem van Humanitas, en in ons eigen beveiligde systeem voor de Thuisadministratie.</p>
+        <p>U heeft het recht om te vragen welke gegevens van u zijn vastgelegd en om uw toestemming weer in te trekken.</p>
+        <p>Voordat we verdergaan, wil ik u vragen of u ermee akkoord gaat dat we het volgende deel opnemen om uw toestemming vast te leggen.</p>
+        <p class="wie">Deelnemer</p>
+        <p>"Ja, daar ga ik mee akkoord."</p>
+        <p class="wie">Vrijwilliger</p>
+        <p>Dank u wel. Dan start ik nu de opname.</p>
+        <p class="wie">Ga nu naar deel 2 en druk op Opname starten</p>
+      </div>
+    </div>
+
+    <div class="deel met">
+      <h3>Deel 2: met opname</h3>
+      <p class="uitleg">Druk eerst op <b>Opname starten</b>. Lees daarna de tekst hieronder voor. Stop de opname aan het eind.</p>
+      <div class="balk" id="opBalk">
+        <div id="optijd">0:00</div>
+        <div id="opstatus">Klaar om op te nemen.</div>
+        <button class="knop hoofd" id="opStart" type="button">Opname starten</button>
+      </div>
+      <div class="tekst">
+        <p class="wie">Vrijwilliger</p>
+        <p>Vandaag is het <b class="opdat"></b>. Mijn naam is <b class="opvw"></b>, vrijwilliger bij Humanitas Thuisadministratie. Ik spreek met <b class="opdn"></b>. Het nummer is <b class="ophv"></b>.</p>
+        <p>Gaat u ermee akkoord dat we dit gesprek opnemen om uw toestemming vast te leggen?</p>
+        <p class="wie">Deelnemer</p>
+        <p>"Ja, daar ga ik mee akkoord."</p>
+        <p class="wie">Vrijwilliger</p>
+        <p>Geeft u vrijwillig toestemming aan Humanitas om uw persoonsgegevens voor de begeleiding bij de Thuisadministratie te verwerken en, voor zover daarvoor uw toestemming nodig is, vast te leggen in HRS, het administratiesysteem van Humanitas, en in ons eigen beveiligde systeem, zoals uitgelegd in de informatie die u heeft ontvangen?</p>
+        <p class="wie">Deelnemer</p>
+        <p>"Ja, daar geef ik toestemming voor."</p>
+        <p class="wie">Vrijwilliger</p>
+        <p>Dank u wel. Hiermee is uw mondelinge toestemming vastgelegd.</p>
+        <p class="wie">Stop daarna de opname</p>
+      </div>
+      <button class="knop stop verborgen" id="opStop" type="button" style="margin-top:12px">Opname stoppen</button>
+      <div id="opResultaat" class="verborgen">
+        <audio id="opSpeler" controls></audio>
+        <div class="rij" style="margin-bottom:12px"><button class="knop hoofd" id="opDeel" type="button">Stuur het bestand naar de co&ouml;rdinator</button><button class="knop" id="opBewaar" type="button">Opslaan als bestand</button></div>
+        <div id="opmelding"></div>
+        <button class="knop" id="opKopieerRef" type="button">Naam en referentienummer kopi&euml;ren<small id="opRefTekst"></small></button>
+        <p class="kaart plak"><b>Plak de naam en het referentienummer erbij.</b><br>Tik hierboven op Naam en referentienummer kopi&euml;ren en plak het in het <b>onderwerp</b> van je mail, of in het <b>bericht</b> bij WhatsApp of OneDrive. Zo weet de co&ouml;rdinator voor welke deelnemer de opname is.</p>
+        <button class="knop" id="opOpnieuw" type="button">Opnieuw opnemen</button>
+        <p class="uitleg">Kies in je mailapp (bijvoorbeeld Gmail) en stuur het bestand naar de co&ouml;rdinator: <b>willem.kolthof@humanitas-noord.nl</b>. Bij een mailapp staat het onderwerp er meestal al in; controleer dat. Verwijder de opname daarna van je telefoon.</p>
+      </div>
+    </div>
+
+    <h2>Daarna</h2>
+    <a class="knop hoofd" id="opVerder">Terugkoppeling deelnemer<small>Opname gemaild, of de deelnemer tekent liever toch een verklaring: ga dan gewoon verder</small></a>
+    </div>
+  </section>
+</main>
+<script>
+// Wachtwoord van dit kwartaal: alleen de SHA-256 van (zout + wachtwoord) staat hier.
+const PERIODE = "2026-K4b";
+const ZOUT = "humanitas-tynaarlo-tk";
+const WW_HASH = "8c835d0d630a510e29085752158c4e6bce99142295853031895da5413caf00d5";
+const FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT_kjkON_ReWy6tcrBlZnAibi_dHjyEahgqTJAlUQURCMU9NSUxZWERaS1pEMjBGUE83TUNROC4u";
+const VRAAG_VW = "r250150172a6b454fae636bc9e1d45795";
+const VRAAG_DN = "r7d4b6d8d128d4a86a00713abaf3233a6";
+const PROFIEL = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT_kjkON_ReWy6tcrBlZnAibi_dHjyEahgqTJAlUMlhBNFEzTUxOR0cxREFWVFRIMlNBV1FOUS4u";
+// Afmelden: per mail aan Willem, of via een Forms-formulier zodra die link hieronder is ingevuld (leeg = alleen per mail)
+const AFMELD_MAIL = "willem.kolthof@humanitas-noord.nl";
+let AFMELD_FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT_kjkON_ReWy6tcrBlZnAibi_dHjyEahgqTJAlURUlERlNFWFVRTkxBMzc1MjBQVjFPSDY2Ny4u";
+let AFMELD_VW = "ra78933e14df6455288767c62ede9f006", AFMELD_DN = "rcfa2d57fd95a4245b631d46f889f1d5e", AFMELD_DATUM = "r965e0889e29247f6b778067819b8818b", AFMELD_REDEN = "r19e3758048c54ca99ff6b475d723ae58", AFMELD_TOEL = "rc73f1635416b498f8216a1482e6d2f6e", AFMELD_BESPROKEN = "r17b837caf6d54dd1ac2430905a8129a5";
+const $ = id => document.getElementById(id);
+function lees(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function schrijf(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+// Gegevens staan na het #-teken in de link: die worden nooit naar de server gestuurd.
+// { v: naam vrijwilliger, d: ["Voornaam - Ref HV-..."], p: 1 = profiel ingevuld (anders profielknop) }
+function gegevens() {
+  const h = location.hash.slice(1);
+  if (h) {
+    try {
+      const t = decodeURIComponent(escape(atob(h.replace(/-/g, "+").replace(/_/g, "/"))));
+      const g = JSON.parse(t);
+      if (g && g.v && Array.isArray(g.d)) { schrijf("tk_gegevens", t); return g; }
+    } catch (e) {}
+  }
+  try { return JSON.parse(lees("tk_gegevens")); } catch (e) { return null; }
+}
+async function sha(s) {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join("");
+}
+
+function toon(id) { ["slot", "lijst", "leeg", "opname", "afmeld"].forEach(s => $(s).classList.toggle("verborgen", s !== id)); }
+
+function voornaam(v) { return String(v).trim().split(" ")[0]; }
+
+function formLink(vw, dn) { return FORM + "&" + VRAAG_VW + "=" + encodeURIComponent(vw) + "&" + VRAAG_DN + "=" + encodeURIComponent(dn); }
+
+// knop voor een deelnemer; bij nog niet binnen toestemming eerst het opnamescherm (daar staat ook de knop Terugkoppeling deelnemer)
+function deelnemerKnop(g, dn, metToestemming) {
+  const a = document.createElement("a");
+  const p = dn.split(" - Ref ");
+  a.className = "knop";
+  a.href = formLink(g.v, dn);
+  a.append(p[0]);
+  if (p[1]) { const s = document.createElement("small"); s.textContent = p[1]; a.append(s); }
+  if (metToestemming && Array.isArray(g.z) && g.z.indexOf(dn) >= 0) {
+    const t = document.createElement("small"); t.className = "tekort"; t.textContent = "Toestemming nog niet binnen"; a.append(t);
+    a.onclick = e => { e.preventDefault(); toonOpname(g, dn); };
+  }
+  return a;
+}
+
+// zoekt onder Andere deelnemer op voornaam (begin) of HV-nummer (deel) in de eigen deelnemers (g.d) en de overige bekende deelnemers (g.o)
+function zoekAnder(g, tekst) {
+  const q = String(tekst || "").trim().toLowerCase();
+  const uit = $("andereUitslag"); uit.innerHTML = "";
+  if (!q) return;
+  const eigen = g.d || [], extra = g.o || [];
+  const alle = eigen.concat(extra.filter(x => eigen.indexOf(x) < 0));
+  let gevonden = alle.filter(x => { const p = x.split(" - Ref "); return (q.length >= 2 && p[0].toLowerCase().startsWith(q)) || (q.length >= 3 && (p[1] || "").toLowerCase().indexOf(q) >= 0); });
+  const exact = gevonden.filter(x => x.split(" - Ref ")[0].toLowerCase() === q || (x.split(" - Ref ")[1] || "").toLowerCase() === q);
+  if (exact.length) gevonden = exact;
+  if (!gevonden.length) {
+    const m = document.createElement("p"); m.className = "uitleg";
+    m.textContent = "Geen bekende deelnemer gevonden met “" + tekst.trim() + "”. Nieuwe deelnemers worden eerst door Willem in Excel gezet; daarna kun je ze hier kiezen. Mail of bel Willem: 06 17187589.";
+    uit.append(m); return;
+  }
+  const k = document.createElement("p"); k.className = "uitleg";
+  k.textContent = gevonden.length === 1 ? "Gevonden in Excel. Klopt dit? Dan zie je het HV-nummer hieronder." : "Meer dan één deelnemer gevonden. Kies de juiste (met HV-nummer):";
+  uit.append(k);
+  gevonden.forEach(dn => uit.append(deelnemerKnop(g, dn, eigen.indexOf(dn) >= 0)));
+}
+
+function lijst(g) {
+  $("wie").textContent = g.v;
+  const box = $("deelnemers"); box.innerHTML = "";
+  afOpruimen(g);   // de melding op deze telefoon vervalt als de deelnemer niet meer in de lijst staat (verwerkt in Excel) of na 3 weken
+  g.d.forEach(dn => {
+    box.append(deelnemerKnop(g, dn, true));
+    const doorgegeven = lees("tk_afm:" + dn);
+    if (doorgegeven) { const s = document.createElement("span"); s.className = "afstand"; s.textContent = "Afmelding klaargezet op " + afNl(doorgegeven); box.append(s); }
+    const b = document.createElement("button"); b.type = "button"; b.className = "klein"; b.textContent = "Afmelden";
+    b.onclick = () => toonAfmeld(g, dn); box.append(b);
+  });
+  // deelnemer die niet in het lijstje staat: voornaam of HV-nummer intikken; de app zoekt alleen onder bekende deelnemers
+  // (eigen, nog niet gekoppelde en recent losgekoppelde) en toont het HV-nummer uit Excel. Nieuwe deelnemers worden hier niet ingevoerd.
+  $("andereKnop").onclick = () => { $("andereBlok").classList.remove("verborgen"); $("andereKnop").classList.add("verborgen"); $("andereNaam").focus(); };
+  const ga = () => zoekAnder(g, $("andereNaam").value);
+  $("andereGo").onclick = ga;
+  $("andereNaam").onkeydown = e => { if (e.key === "Enter") ga(); };
+  // profielknop alleen als het profiel nog niet is ingevuld
+  if (g.p === 0) { $("profiel").href = PROFIEL; $("profiel").classList.remove("verborgen"); }
+  toon("lijst");
+}
+
+// ---- deelnemer afmelden: per mail aan Willem (of via het formulier); er gaat niets automatisch weg ----
+const af = { g: null, dn: "" };
+function afVandaag() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function afNl(iso) { const p = String(iso).split("-"); return p.length === 3 ? p[2] + "-" + p[1] + "-" + p[0] : iso; }
+function afOpruimen(g) {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf("tk_afm:") === 0) {
+        const d = new Date(localStorage.getItem(k));
+        if (g.d.indexOf(k.slice(7)) < 0 || isNaN(d) || (Date.now() - d) > 21 * 86400000) localStorage.removeItem(k);
+      }
+    }
+  } catch (e) {}
+}
+function toonAfmeld(g, dn) {
+  af.g = g; af.dn = dn;
+  $("afNaam").textContent = dn.split(" - Ref ")[0];
+  $("afDatum").value = afVandaag();
+  $("afFout").textContent = ""; $("afKlaar").classList.add("verborgen"); $("afForm").classList.remove("verborgen");
+  [].forEach.call(document.getElementsByName("afReden"), r => { r.checked = false; });
+  $("afBesproken").checked = false; $("afToelichting").value = "";
+  $("afFormulier").classList.toggle("verborgen", !AFMELD_FORM);
+  // met een formulier is de mail een keuze (bijvoorbeeld om meer uit te leggen); zonder formulier is de mail de enige route
+  if (AFMELD_FORM) { $("afMail").className = "knop"; $("afMail").innerHTML = "Liever per mail<small>Bijvoorbeeld als je meer wilt uitleggen. Je mailapp opent met een kant-en-klare mail aan Willem; verstuur die zelf.</small>"; }
+  else { $("afMail").className = "knop stop"; $("afMail").innerHTML = 'Afmelding doorgeven per mail<small style="color:#ffd9d6">Je mailapp opent met een kant-en-klare mail aan Willem; verstuur die zelf</small>'; }
+  toon("afmeld"); window.scrollTo(0, 0);
+}
+function afGegevens() {
+  const r = [].filter.call(document.getElementsByName("afReden"), x => x.checked)[0];
+  if (!r) { $("afFout").textContent = "Kies eerst een reden."; return null; }
+  if (!$("afBesproken").checked) { $("afFout").textContent = "Vink aan dat je dit met de deelnemer hebt besproken."; return null; }
+  if (!$("afDatum").value) { $("afFout").textContent = "Vul de datum van afmelden in."; return null; }
+  $("afFout").textContent = "";
+  return { reden: r.value, datum: afNl($("afDatum").value), toel: $("afToelichting").value.trim() };
+}
+function afKlaarZetten() { schrijf("tk_afm:" + af.dn, afVandaag()); $("afForm").classList.add("verborgen"); $("afKlaar").classList.remove("verborgen"); }
+$("afTerug").onclick = () => { lijst(af.g); };
+$("afMail").onclick = () => {
+  const x = afGegevens(); if (!x) return;
+  const p = af.dn.split(" - Ref "), hv = p[1] || "";
+  const onderwerp = "Afmelden deelnemer - Ref " + hv + " (" + p[0] + ")";
+  const tekst = "Vrijwilliger: " + af.g.v + "\nDeelnemer: " + af.dn + "\nDatum afmelden: " + x.datum + "\nReden: " + x.reden + "\nToelichting: " + x.toel + "\nBesproken met deelnemer: ja\n";
+  const url = "mailto:" + AFMELD_MAIL + "?subject=" + encodeURIComponent(onderwerp) + "&body=" + encodeURIComponent(tekst);
+  window.__laatsteMail = url;
+  afKlaarZetten();
+  if (!window.__geenMailto) location.href = url;
+};
+$("afFormulier").onclick = () => {
+  const x = afGegevens(); if (!x || !AFMELD_FORM) return;
+  let u = AFMELD_FORM;
+  const veld = (k, v) => { if (k) u += "&" + k + "=" + encodeURIComponent(v); };
+  veld(AFMELD_VW, af.g.v); veld(AFMELD_DN, af.dn); veld(AFMELD_DATUM, x.datum); veld(AFMELD_REDEN, '"' + x.reden + '"'); veld(AFMELD_TOEL, x.toel); veld(AFMELD_BESPROKEN, '"Ja"');   // keuzevragen verwachten de tekst tussen aanhalingstekens
+  window.__laatsteForm = u;
+  schrijf("tk_afm:" + af.dn, afVandaag());
+  if (!window.__geenMailto) location.href = u;
+};
+
+// ---- toestemming mondeling vastleggen: opname op de telefoon, daarna zelf mailen (er gaat niets naar een server) ----
+const op = { g: null, dn: "", hv: "", rec: null, stukken: [], stream: null, bestand: null, url: null, t0: 0, timer: null, mime: "" };
+function opMm(s) { s = Math.floor(s); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
+function opStatus(t) { $("opstatus").textContent = t; }
+function opMeld(t) { $("opmelding").textContent = t; opStatus(t); }
+function opStopStream() { if (op.stream) { op.stream.getTracks().forEach(t => t.stop()); op.stream = null; } if (op.timer) { clearInterval(op.timer); op.timer = null; } }
+// kenmerk van de opname: onderwerp van de mail en tekst om te plakken (Excel herkent "- Ref HV-nummer" in het onderwerp)
+function opKenmerk() { return "Toestemmingsopname - Ref " + op.hv + (op.naam ? " (" + op.naam + ")" : ""); }
+function opReset() {
+  opStopStream();
+  if (op.rec && op.rec.state !== "inactive") { op.rec.onstop = null; try { op.rec.stop(); } catch (e) {} }
+  op.rec = null; op.stukken = []; op.bestand = null;
+  if (op.url) { URL.revokeObjectURL(op.url); op.url = null; }
+  $("opSpeler").removeAttribute("src");
+  $("opBalk").style.position = "sticky";
+  $("opResultaat").classList.add("verborgen"); $("opStop").classList.add("verborgen"); $("opStart").classList.remove("verborgen");
+  $("optijd").textContent = "0:00"; $("opmelding").textContent = ""; opStatus("Klaar om op te nemen.");
+}
+function toonOpname(g, dn) {
+  const p = dn.split(" - Ref ");
+  op.g = g; op.dn = dn; op.hv = p[1] || ""; op.naam = p[0];
+  $("opRefTekst").textContent = dn;
+  $("opNaam").textContent = p[0];
+  const nu = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+  [].forEach.call(document.querySelectorAll(".opvw"), e => { e.textContent = g.v; });
+  [].forEach.call(document.querySelectorAll(".opdn"), e => { e.textContent = p[0]; });
+  [].forEach.call(document.querySelectorAll(".opdat"), e => { e.textContent = nu; });
+  [].forEach.call(document.querySelectorAll(".ophv"), e => { e.textContent = op.hv || "(nummer ontbreekt)"; });
+  $("opVerder").href = formLink(g.v, dn);
+  $("opKiesTekenen").href = formLink(g.v, dn);
+  $("opOverslaan").href = formLink(g.v, dn);
+  $("opKeuze").classList.remove("verborgen"); $("opWerk").classList.add("verborgen");
+  opReset(); toon("opname"); window.scrollTo(0, 0);
+}
+function opKiesMime() {
+  if (!window.MediaRecorder) return null;
+  const k = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+  for (let i = 0; i < k.length; i++) { try { if (MediaRecorder.isTypeSupported(k[i])) return k[i]; } catch (e) {} }
+  return "";
+}
+// Chrome en Safari nemen op als mp4/webm met Opus; WhatsApp en veel mailapps kunnen dat niet verwerken: daarom omzetten naar WAV (16 kHz, mono)
+function opNaarWav(blob) {
+  const AC = window.AudioContext || window.webkitAudioContext, OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  if (!AC || !OAC) return Promise.reject(new Error("geen AudioContext"));
+  return blob.arrayBuffer().then(buf => {
+    const ac = new AC();
+    return new Promise((ok, fout) => { ac.decodeAudioData(buf, ok, fout); }).then(ab => {
+      try { ac.close(); } catch (e) {}
+      const hz = 16000, oc = new OAC(1, Math.max(1, Math.ceil(ab.duration * hz)), hz), bron = oc.createBufferSource();
+      bron.buffer = ab; bron.connect(oc.destination); bron.start();
+      return oc.startRendering();
+    });
+  }).then(r => {
+    const x = r.getChannelData(0), n = x.length, b = new ArrayBuffer(44 + n * 2), v = new DataView(b);
+    const s = (o, t) => { for (let k = 0; k < t.length; k++) v.setUint8(o + k, t.charCodeAt(k)); };
+    s(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); s(8, "WAVE"); s(12, "fmt "); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 16000, true); v.setUint32(28, 32000, true);
+    v.setUint16(32, 2, true); v.setUint16(34, 16, true); s(36, "data"); v.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) { const f = Math.max(-1, Math.min(1, x[i])); v.setInt16(44 + i * 2, f < 0 ? f * 32768 : f * 32767, true); }
+    return new Blob([b], { type: "audio/wav" });
+  });
+}
+function opKlaar() {
+  const type = (op.mime || "audio/webm").split(";")[0];
+  const blob = new Blob(op.stukken, { type: type });
+  const duur = opMm((Date.now() - op.t0) / 1000);
+  const naam = "Toestemming-" + (op.hv || "HV") + "-" + new Date().toISOString().slice(0, 10) + ".wav";
+  if (op.url) URL.revokeObjectURL(op.url);
+  op.url = URL.createObjectURL(blob); $("opSpeler").src = op.url; op.bestand = null;
+  $("opBalk").style.position = "static";   // na de opname geen vastgeplakte balk: de knoppen Mailen en Opslaan moeten in beeld kunnen
+  $("opResultaat").classList.remove("verborgen");
+  $("opmelding").textContent = "Bezig met omzetten naar een bestand dat overal werkt...";
+  opStatus("Opname klaar (" + duur + "). Even wachten, hij wordt omgezet.");
+  try { $("opResultaat").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
+  opNaarWav(blob).then(w => {
+    try { op.bestand = new File([w], naam, { type: "audio/wav" }); } catch (e) { op.bestand = w; op.bestand.name = naam; }
+    $("opmelding").textContent = "Klaar: " + naam + ", " + Math.round(w.size / 1024) + " kB. Kies Stuur het bestand naar de coördinator of Opslaan als bestand.";
+    opStatus("Opname klaar (" + duur + "). Hij staat nog alleen op dit scherm: stuur hem naar de coördinator of sla hem op.");
+  }).catch(e => {
+    $("opmelding").textContent = "Omzetten lukte niet (" + (e && e.name ? e.name : "onbekend") + "). Neem de opname opnieuw op, of laat de deelnemer op papier tekenen.";
+  });
+}
+$("opTerug").onclick = () => { opReset(); toon("lijst"); };
+$("opKiesOpname").onclick = () => { $("opKeuze").classList.add("verborgen"); $("opWerk").classList.remove("verborgen"); window.scrollTo(0, 0); };
+$("opOpnieuw").onclick = () => opReset();
+$("opStart").onclick = () => {
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !window.MediaRecorder) { opStatus("Opnemen werkt niet in deze browser. Probeer Chrome of Safari, of laat de deelnemer op papier tekenen."); return; }
+  opStatus("Wacht op toestemming voor de microfoon...");
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
+    op.stream = s; op.stukken = []; op.mime = opKiesMime();
+    try { op.rec = op.mime ? new MediaRecorder(s, { mimeType: op.mime }) : new MediaRecorder(s); } catch (e) { op.rec = new MediaRecorder(s); }
+    op.mime = op.rec.mimeType || op.mime || "audio/webm";
+    op.rec.ondataavailable = e => { if (e.data && e.data.size) op.stukken.push(e.data); };
+    op.rec.onstop = opKlaar;
+    op.rec.start(1000);
+    op.t0 = Date.now(); $("optijd").textContent = "0:00";
+    op.timer = setInterval(() => { $("optijd").textContent = opMm((Date.now() - op.t0) / 1000); }, 250);
+    $("opBalk").style.position = "sticky";
+    $("opStart").classList.add("verborgen"); $("opStop").classList.remove("verborgen"); $("opResultaat").classList.add("verborgen");
+    opStatus("Er wordt opgenomen... lees nu de tekst voor.");
+  }).catch(e => { opStatus("Geen toegang tot de microfoon (" + (e && e.name ? e.name : "onbekend") + "). Sta de microfoon toe voor deze pagina en probeer opnieuw."); });
+};
+$("opStop").onclick = () => {
+  if (op.timer) { clearInterval(op.timer); op.timer = null; }
+  if (op.rec && op.rec.state !== "inactive") op.rec.stop();
+  opStopStream();
+  $("opStop").classList.add("verborgen"); $("opStart").classList.remove("verborgen");
+};
+$("opDeel").onclick = () => {
+  opMeld("Delen wordt geprobeerd...");
+  if (!navigator.share) { opMeld("Mailen kan niet in deze browser. Gebruik Opslaan als bestand en mail het bestand zelf aan de coördinator."); return; }
+  if (!(op.bestand instanceof File)) { opMeld("De opname wordt nog omgezet of er is nog niets opgenomen. Probeer het over een paar seconden opnieuw."); return; }
+  if (!(navigator.canShare && navigator.canShare({ files: [op.bestand] }))) { opMeld("Delen met dit bestandstype kan niet. Gebruik Opslaan als bestand en mail het bestand zelf aan de coördinator."); return; }
+  const titel = opKenmerk();
+  navigator.share({ files: [op.bestand], title: titel, text: titel + ", vrijwilliger " + op.g.v }).then(() => {
+    opMeld("Gedeeld. Is de mail aan de coördinator verzonden? Verwijder de opname dan van deze telefoon.");
+  }).catch(e => {
+    if (e && e.name === "AbortError") opMeld("Delen geannuleerd.");
+    else opMeld("Delen mislukt (" + (e && e.name ? e.name : "onbekend") + "). Gebruik Opslaan als bestand en mail het zelf aan de coördinator.");
+  });
+};
+$("opKopieerRef").onclick = () => {
+  const t = op.dn;   // voornaam - Ref HV-nummer, zoals in de lijst; Excel herkent '- Ref HV-...' ook in een onderwerp
+  const klaar = () => opMeld("Gekopieerd: " + t + ". Plak het in het onderwerp of het bericht.");
+  try { navigator.clipboard.writeText(t).then(klaar, () => opMeld("Kopiëren lukte niet. Het kenmerk is: " + t)); }
+  catch (e) { opMeld("Kopiëren lukte niet. Het kenmerk is: " + t); }
+};
+$("opBewaar").onclick = () => {
+  if (!op.bestand) { opMeld("De opname wordt nog omgezet. Probeer het over een paar seconden opnieuw."); return; }
+  const u = URL.createObjectURL(op.bestand), a = document.createElement("a");
+  a.href = u; a.download = op.bestand.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 10000);
+  opMeld("Opgeslagen als " + op.bestand.name + " (kijk bij Downloads of Bestanden). Mail dit bestand aan de coördinator, met " + op.hv + " in het onderwerp.");
+};
+
+// ---- vaste link (v3): de link bevat alleen een token; de lijst staat versleuteld in data/<token>.json ----
+const ITER = 200000;
+function unb64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+function hex(u8) { return Array.from(u8).map(x => x.toString(16).padStart(2, "0")).join(""); }
+function unhex(s) { const a = new Uint8Array(s.length / 2); for (let i = 0; i < a.length; i++) a[i] = parseInt(s.substr(i * 2, 2), 16); return a; }
+async function sleutelUitWachtwoord(ww, token) {
+  const basis = await crypto.subtle.importKey("raw", new TextEncoder().encode(ww.trim().toLowerCase()), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", iterations: ITER, salt: new TextEncoder().encode(ZOUT + ":" + PERIODE + ":" + token) }, basis, 256);
+  return new Uint8Array(bits);
+}
+async function ontsleutel(sleutel, bestand) {
+  const key = await crypto.subtle.importKey("raw", sleutel, "AES-GCM", false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(bestand.iv) }, key, unb64(bestand.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function haalBestand(token) {
+  try {
+    const r = await fetch("data/" + encodeURIComponent(token) + ".json?ts=" + Date.now(), { cache: "no-store" });
+    if (r.status === 404) return "onbekend";
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e) { return null; }
+}
+function datumTijd(t) {
+  const d = new Date(t);
+  if (isNaN(d)) return "";
+  return d.getDate() + "-" + (d.getMonth() + 1) + "-" + d.getFullYear() + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+}
+// haalt de lijst op en ontsleutelt hem; zonder verbinding geldt de laatst bekende lijst. Fouten: "ww" (verkeerd wachtwoord), "onbekend", "verbinding"
+async function laadToken(token, sleutel) {
+  const bestand = await haalBestand(token);
+  const cache = "tk_cache:" + token;
+  if (bestand && bestand !== "onbekend") {
+    let g;
+    try { g = await ontsleutel(sleutel, bestand); } catch (e) { throw "ww"; }
+    schrijf(cache, JSON.stringify(g));
+    return { g: g, offline: false };
+  }
+  const c = lees(cache);
+  if (c) { try { return { g: JSON.parse(c), offline: true }; } catch (e) {} }
+  throw bestand === "onbekend" ? "onbekend" : "verbinding";
+}
+async function startToken(token) {
+  const sleutelNaam = "tk_key:" + PERIODE + ":" + token;
+  const toonResultaat = r => {
+    $("bijgewerkt").textContent = (r.offline ? "Geen verbinding: dit is de laatst bekende lijst" : "Lijst") + (r.g.t ? " van " + datumTijd(r.g.t) : "") + ".";
+    lijst(r.g);
+  };
+  const sleutelHex = lees(sleutelNaam);
+  if (sleutelHex) {
+    try { toonResultaat(await laadToken(token, unhex(sleutelHex))); return; }
+    catch (e) { if (e === "onbekend") { toon("leeg"); return; } if (e === "verbinding") { toon("leeg"); $("leeg").querySelector("p").textContent = "Geen verbinding. Probeer het later opnieuw."; return; } }
+  }
+  toon("slot");
+  const probeer = async () => {
+    try {
+      const sleutel = await sleutelUitWachtwoord($("ww").value, token);
+      const r = await laadToken(token, sleutel);
+      schrijf(sleutelNaam, hex(sleutel)); $("ww").value = ""; toonResultaat(r);
+    } catch (e) {
+      $("fout").textContent = e === "ww" ? "Dit wachtwoord klopt niet." : e === "onbekend" ? "Deze app-link klopt niet (meer). Vraag Willem om een nieuwe." : "Geen verbinding. Probeer het later opnieuw.";
+    }
+  };
+  $("open").onclick = probeer;
+  $("ww").onkeydown = e => { if (e.key === "Enter") probeer(); };
+}
+
+async function start() {
+  const h = location.hash.slice(1);
+  if (h.indexOf("t=") === 0) {
+    const t = h.slice(2).replace(/[^A-Za-z0-9_-]/g, "");
+    if (t) { schrijf("tk_token", t); startToken(t); return; }
+  }
+  if (!h) { const t = lees("tk_token"); if (t) { startToken(t); return; } }
+  const g = gegevens();
+  if (!g) { toon("leeg"); return; }
+  if (lees("tk_slot") === PERIODE + ":" + WW_HASH) { lijst(g); return; }
+  toon("slot");
+  const probeer = async () => {
+    const h = await sha(ZOUT + $("ww").value.trim().toLowerCase());
+    if (h === WW_HASH) { schrijf("tk_slot", PERIODE + ":" + WW_HASH); $("ww").value = ""; lijst(g); }
+    else { $("fout").textContent = "Dit wachtwoord klopt niet."; }
+  };
+  $("open").onclick = probeer;
+  $("ww").onkeydown = e => { if (e.key === "Enter") probeer(); };
+}
+start();
+</script>
+</body>
+</html>

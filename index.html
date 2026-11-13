@@ -82,6 +82,11 @@
         <div id="andereUitslag"></div>
       </div>
     </div>
+    <div id="kennisblok">
+      <h2>Kennis</h2>
+      <p class="uitleg">Tik een onderwerp aan en verstuur het formulier: Willem mailt je daarna de kennis over dat onderwerp. In de app zelf staat niets.</p>
+      <div id="kennislijst"></div>
+    </div>
     <h2>Handig</h2>
     <a class="knop verborgen" id="profiel" target="_blank" rel="noopener">Mijn vrijwilligersprofiel invullen<small>Nog niet ingevuld: daarmee krijg je hulpvragen die bij je passen</small></a>
     <a class="knop" href="werkwijze.pdf" target="_blank" rel="noopener">Hoe werkt het?<small>Werkwijze nieuwe hulpvraag (pdf)</small></a>
@@ -200,6 +205,13 @@ const PROFIEL = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT
 const AFMELD_MAIL = "willem.kolthof@humanitas-noord.nl";
 let AFMELD_FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT_kjkON_ReWy6tcrBlZnAibi_dHjyEahgqTJAlURUlERlNFWFVRTkxBMzc1MjBQVjFPSDY2Ny4u";
 let AFMELD_VW = "ra78933e14df6455288767c62ede9f006", AFMELD_DN = "rcfa2d57fd95a4245b631d46f889f1d5e", AFMELD_DATUM = "r965e0889e29247f6b778067819b8818b", AFMELD_REDEN = "r19e3758048c54ca99ff6b475d723ae58", AFMELD_TOEL = "rc73f1635416b498f8216a1482e6d2f6e", AFMELD_BESPROKEN = "r17b837caf6d54dd1ac2430905a8129a5";
+// Kennis aanvragen: formulier 'Kennis aanvragen' (naam en onderwerp worden vooraf ingevuld). Nieuw onderwerp = regel erbij in KENNIS
+// (titel precies zoals de keuze in het formulier, korte uitleg) en dezelfde titel als antwoordoptie in het formulier en op tabblad Kennis in Excel.
+const KENNIS_FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=ndiATT_kjkON_ReWy6tcrBlZnAibi_dHjyEahgqTJAlUN1BQMTI5Q05BN0pXOUtTUDY4T1g0MUU0NC4u";
+const KENNIS_VW = "r4bf4889d6c3949e992ea36cfe664629b", KENNIS_ONDERWERP = "r5b0d8e8d8e7b4a62a333554dd5d53f6f";
+const KENNIS = [
+  ["Zorgverzekering en zorgtoeslag", "Wat je moet weten over verzekering en toeslag, per mail"]
+];
 const $ = id => document.getElementById(id);
 function lees(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function schrijf(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -280,6 +292,14 @@ function lijst(g) {
   const ga = () => zoekAnder(g, $("andereNaam").value);
   $("andereGo").onclick = ga;
   $("andereNaam").onkeydown = e => { if (e.key === "Enter") ga(); };
+  // kennis: per onderwerp een knop die het formulier opent (naam en onderwerp ingevuld); Willem mailt de kennis daarna per mail
+  const kl = $("kennislijst"); kl.innerHTML = "";
+  KENNIS.forEach(k => {
+    const a = document.createElement("a"); a.className = "knop"; a.target = "_blank"; a.rel = "noopener";
+    a.href = KENNIS_FORM + "&" + KENNIS_VW + "=" + encodeURIComponent(g.v) + "&" + KENNIS_ONDERWERP + "=" + encodeURIComponent('"' + k[0] + '"');
+    a.innerHTML = ""; a.append(k[0]); const s = document.createElement("small"); s.textContent = k[1]; a.append(s); kl.append(a);
+  });
+  $("kennisblok").classList.toggle("verborgen", KENNIS.length === 0);
   // profielknop alleen als het profiel nog niet is ingevuld
   if (g.p === 0) { $("profiel").href = PROFIEL; $("profiel").classList.remove("verborgen"); }
   toon("lijst");

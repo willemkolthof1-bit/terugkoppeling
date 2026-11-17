@@ -38,6 +38,9 @@
   .tekst { background:#fff; border:1px solid var(--rand); border-radius:12px; padding:14px 16px; line-height:1.45; font-size:18px; }
   .tekst p { margin:0 0 12px; }
   .tekst p:last-child { margin-bottom:0; }
+  .taalbalk { background:#e8f4f1; border-radius:12px; padding:10px 14px; margin:0 0 12px; font-size:16px; }
+  .taalbalk .tk { display:inline-block; margin:6px 8px 0 0; padding:8px 14px; border-radius:10px; border:1px solid var(--rand); background:#fff; font-size:16px; }
+  .taalbalk .tk.aan { background:var(--groen); color:#fff; border-color:var(--groen); font-weight:700; }
   .wie { font-size:14px; font-weight:700; color:var(--groen); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px !important; }
   .deel { border-radius:14px; padding:14px 14px 16px; margin:18px 0 0; }
   .deel h3 { margin:0 0 4px; font-size:20px; }
@@ -130,11 +133,12 @@
     </div>
     <div id="opWerk" class="verborgen">
     <p class="uitleg">Liever toch een getekende verklaring? Ga dan onderaan gewoon verder naar de terugkoppeling.</p>
+    <div class="taalbalk"><div>Voertaal van de deelnemer: <b id="tkVoertaal">Nederlands</b></div><div>Tekst om voor te lezen in: <span id="tkKnoppen"></span></div></div>
 
     <div class="deel zonder">
       <h3>Deel 1: zonder opname</h3>
       <p class="uitleg">Lees dit eerst voor. Er wordt nog niets opgenomen.</p>
-      <div class="tekst">
+      <div class="tekst" id="tk1t">
         <p class="wie">Vrijwilliger</p>
         <p>U heeft informatie ontvangen over hoe Humanitas met uw persoonsgegevens omgaat.</p>
         <p>Humanitas gebruikt uw gegevens om u te kunnen begeleiden bij uw thuisadministratie. De gegevens die daarvoor nodig zijn, worden vastgelegd in HRS, het administratiesysteem van Humanitas, en in ons eigen beveiligde systeem voor de Thuisadministratie.</p>
@@ -156,7 +160,7 @@
         <div id="opstatus">Klaar om op te nemen.</div>
         <button class="knop hoofd" id="opStart" type="button">Opname starten</button>
       </div>
-      <div class="tekst">
+      <div class="tekst" id="tk2t">
         <p class="wie">Vrijwilliger</p>
         <p>Vandaag is het <b class="opdat"></b>. Mijn naam is <b class="opvw"></b>, vrijwilliger bij Humanitas Thuisadministratie. Ik spreek met <b class="opdn"></b>. Het nummer is <b class="ophv"></b>.</p>
         <p>Gaat u ermee akkoord dat we dit gesprek opnemen om uw toestemming vast te leggen?</p>
@@ -361,16 +365,61 @@ function opReset() {
   $("opResultaat").classList.add("verborgen"); $("opStop").classList.add("verborgen"); $("opStart").classList.remove("verborgen");
   $("optijd").textContent = "0:00"; $("opmelding").textContent = ""; opStatus("Klaar om op te nemen.");
 }
+// ---- voorleestekst per taal: nl staat in de pagina zelf; voor elke andere taal een eigen tekst hieronder (code = zelfde als in Excel/beheer.py: "en") ----
+const TAAL_NAAM = { nl: "Nederlands", en: "English" };
+const TAAL_VOERTAAL = { nl: "Nederlands", en: "Engels" };
+const TAAL_TEKST = {
+  en: {
+    d1: '<p class="wie">Volunteer</p>' +
+      '<p>You have received information about how Humanitas handles your personal data.</p>' +
+      '<p>Humanitas uses your data to be able to support you with your home administration. The data needed for this are recorded in HRS, the Humanitas administration system, and in our own secured system for the Home Administration.</p>' +
+      '<p>You have the right to ask which data about you have been recorded and to withdraw your consent.</p>' +
+      '<p>Before we continue, I would like to ask whether you agree that we record the next part to document your consent.</p>' +
+      '<p class="wie">Participant</p><p>"Yes, I agree."</p>' +
+      '<p class="wie">Volunteer</p><p>Thank you. I will now start the recording.</p>' +
+      '<p class="wie">Ga nu naar deel 2 en druk op Opname starten</p>',
+    d2: '<p class="wie">Volunteer</p>' +
+      '<p>Today is <b class="opdat"></b>. My name is <b class="opvw"></b>, volunteer at Humanitas Home Administration. I am speaking with <b class="opdn"></b>. The number is <b class="ophv"></b>.</p>' +
+      '<p>Do you agree that we record this conversation to document your consent?</p>' +
+      '<p class="wie">Participant</p><p>"Yes, I agree."</p>' +
+      '<p class="wie">Volunteer</p>' +
+      '<p>Do you voluntarily give Humanitas your consent to process your personal data for the support with your home administration, and, where your consent is needed for this, to record it in HRS, the Humanitas administration system, and in our own secured system, as explained in the information you received?</p>' +
+      '<p class="wie">Participant</p><p>"Yes, I give my consent."</p>' +
+      '<p class="wie">Volunteer</p><p>Thank you. Your verbal consent has now been recorded.</p>' +
+      '<p class="wie">Stop daarna de opname</p>'
+  }
+};
+const TAAL_NL = {};
+function opVul() {
+  const nu = { nl: new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" }), en: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) };
+  const dat = (op.taal === "en") ? nu.en : nu.nl;
+  const p = op.dn.split(" - Ref ");
+  [].forEach.call(document.querySelectorAll(".opvw"), e => { e.textContent = op.g.v; });
+  [].forEach.call(document.querySelectorAll(".opdn"), e => { e.textContent = p[0]; });
+  [].forEach.call(document.querySelectorAll(".opdat"), e => { e.textContent = dat; });
+  [].forEach.call(document.querySelectorAll(".ophv"), e => { e.textContent = op.hv || "(nummer ontbreekt)"; });
+}
+function zetTaal(code) {
+  if (!TAAL_NL.d1) { TAAL_NL.d1 = $("tk1t").innerHTML; TAAL_NL.d2 = $("tk2t").innerHTML; }
+  const t = (code !== "nl" && TAAL_TEKST[code]) ? TAAL_TEKST[code] : TAAL_NL;
+  if (!(code !== "nl" && TAAL_TEKST[code])) code = "nl";
+  op.taal = code;
+  $("tk1t").innerHTML = t.d1; $("tk2t").innerHTML = t.d2;
+  const kn = $("tkKnoppen"); kn.textContent = "";
+  ["nl"].concat(Object.keys(TAAL_TEKST)).forEach(c => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "tk" + (c === code ? " aan" : ""); b.textContent = TAAL_NAAM[c] || c;
+    b.addEventListener("click", () => zetTaal(c)); kn.append(b);
+  });
+  opVul();
+}
 function toonOpname(g, dn) {
   const p = dn.split(" - Ref ");
   op.g = g; op.dn = dn; op.hv = p[1] || ""; op.naam = p[0];
   $("opRefTekst").textContent = dn;
   $("opNaam").textContent = p[0];
-  const nu = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
-  [].forEach.call(document.querySelectorAll(".opvw"), e => { e.textContent = g.v; });
-  [].forEach.call(document.querySelectorAll(".opdn"), e => { e.textContent = p[0]; });
-  [].forEach.call(document.querySelectorAll(".opdat"), e => { e.textContent = nu; });
-  [].forEach.call(document.querySelectorAll(".ophv"), e => { e.textContent = op.hv || "(nummer ontbreekt)"; });
+  const code = (g.l && g.l[dn]) ? String(g.l[dn]) : "nl";   // voertaal van de deelnemer (alleen als die niet Nederlands is), uit Excel
+  $("tkVoertaal").textContent = TAAL_VOERTAAL[code] || "Nederlands";
+  zetTaal(code);
   $("opVerder").href = formLink(g.v, dn);
   $("opKiesTekenen").href = formLink(g.v, dn);
   $("opOverslaan").href = formLink(g.v, dn);

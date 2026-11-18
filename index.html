@@ -54,6 +54,16 @@
   #opstatus { text-align:center; color:var(--zacht); min-height:1.4em; margin:0 0 8px; font-size:15px; }
   #opmelding { font-size:15px; color:#3f4a4a; margin:-4px 0 12px; min-height:1.3em; word-break:break-word; }
   audio { width:100%; margin:0 0 12px; }
+  .knopen { display:flex; gap:18px; align-items:center; margin:-6px 0 12px; }
+  .knopen .klein { display:inline-block; margin:0; }
+  .klein.dos { color:#00695f; }
+  .dk h3 { margin:18px 0 6px; color:var(--groen); font-size:17px; }
+  .dk .regel { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--rand); font-size:16px; }
+  .dk .regel span:first-child { color:var(--zacht); flex:0 0 42%; }
+  .dk .regel a { color:var(--groen); font-weight:700; text-decoration:none; }
+  .dk p { margin:6px 0; line-height:1.45; }
+  .dk .stap { border-left:3px solid var(--groen); padding:2px 0 8px 12px; margin:0 0 10px; }
+  .dk .stap b { display:block; font-size:14px; color:var(--zacht); }
   .klein { display:block; margin:-6px 0 12px; background:none; border:none; color:#b3261e; font-size:15px; text-decoration:underline; cursor:pointer; font-family:inherit; padding:6px 4px; }
   .afstand { display:block; color:var(--zacht); font-size:14px; margin:-8px 0 12px 4px; }
   .keuzes label { display:block; background:#fff; border:1px solid var(--rand); border-radius:12px; padding:14px 14px; margin:0 0 8px; font-size:18px; }
@@ -95,6 +105,12 @@
   <section id="leeg" class="verborgen">
     <p>Deze app kent je gegevens nog niet.</p>
     <p class="uitleg">Open de app-link uit de mail van Willem, dan staan je gegevens erin.</p>
+  </section>
+  <section id="dossier" class="verborgen dk">
+    <button class="knop" id="dosTerug" type="button">&larr; Terug naar de lijst</button>
+    <h2 id="dosKop">Dossier</h2>
+    <p class="uitleg">Alleen voor jou als vrijwilliger van deze deelnemer. Niet doorsturen of delen.</p>
+    <div id="dosInhoud"></div>
   </section>
   <section id="afmeld" class="verborgen">
     <button class="knop" id="afTerug" type="button">&larr; Terug naar de lijst</button>
@@ -229,13 +245,59 @@ async function sha(s) {
   return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join("");
 }
 
-function toon(id) { ["slot", "lijst", "leeg", "opname", "afmeld"].forEach(s => $(s).classList.toggle("verborgen", s !== id)); }
+function toon(id) { ["slot", "lijst", "leeg", "opname", "afmeld", "dossier"].forEach(s => $(s).classList.toggle("verborgen", s !== id)); }
 
 function voornaam(v) { return String(v).trim().split(" ")[0]; }
 
 // het formulier opent in een eigen venster/tabblad (sluiten brengt de vrijwilliger terug in de app); de app zelf springt meteen terug naar de lijst,
 // zodat hij niet op het scherm van de deelnemer blijft staan
 function naFormulier(g) { setTimeout(() => { if (g && g.d) lijst(g); toon("lijst"); window.scrollTo(0, 0); }, 400); }
+
+// ---- dossier: wat Excel in het Word-dossier heeft (opgeschoond: geen achternaam, adres of geboortedatum) ----
+const COORD_TEL = "06 38097268", COORD_NAAM = "Willem Kolthof";
+function dosTelHref(t) { return "tel:" + String(t).replace(/[^0-9+]/g, ""); }
+function dosKop(txt) { const h = document.createElement("h3"); h.textContent = txt; return h; }
+function dosRegel(label, waarde, tel) {
+  const r = document.createElement("div"); r.className = "regel";
+  const a = document.createElement("span"); a.textContent = label;
+  let b;
+  if (tel) { b = document.createElement("a"); b.href = dosTelHref(waarde); b.textContent = waarde; } else { b = document.createElement("span"); b.textContent = waarde; }
+  r.append(a, b); return r;
+}
+function dosTekst(kop, tekst, box) {
+  if (!tekst) return;
+  box.append(dosKop(kop)); const p = document.createElement("p"); p.textContent = tekst; box.append(p);
+}
+function toonDossier(g, dn) {
+  const k = (g.k && g.k[dn]) || null;
+  const p = dn.split(" - Ref ");
+  $("dosKop").textContent = "Dossier: " + p[0] + (p[1] ? " (" + p[1] + ")" : "");
+  const box = $("dosInhoud"); box.innerHTML = "";
+  if (!k) {
+    const m = document.createElement("p"); m.textContent = "Voor deze deelnemer is nog geen dossier beschikbaar. Vraag het aan " + COORD_NAAM + "."; box.append(m);
+  } else {
+    if ((k.g || []).length) { box.append(dosKop("Gegevens")); k.g.forEach(x => box.append(dosRegel(x[0], x[1], x[0] === "Telefoon"))); }
+    dosTekst("De hulpvraag", k.h, box); dosTekst("Wat de aanmelder verwacht", k.v, box); dosTekst("Aandachtspunten", k.a, box);
+    const heeftB = (k.b || []).length || (k.c && k.c[0]);
+    if (heeftB) {
+      box.append(dosKop("Verwijzer en contactpersoon"));
+      (k.b || []).forEach(x => box.append(dosRegel(x[0], x[1], false)));
+      if (k.c && k.c[0]) box.append(dosRegel("Contactpersoon", k.c[0], false));
+      if (k.c && k.c[1]) box.append(dosRegel("Telefoon contactpersoon", k.c[1], true));
+    }
+    dosTekst("Toestemming", k.t ? "Toestemmingsverklaring: " + k.t : "", box);
+    box.append(dosKop("Verloop"));
+    if ((k.l || []).length) {
+      k.l.forEach(x => { const d = document.createElement("div"); d.className = "stap"; const b = document.createElement("b"); b.textContent = [x.d, x.w, x.s].filter(Boolean).join(" \u00b7 "); const t = document.createElement("div"); t.textContent = x.t; d.append(b, t); box.append(d); });
+    } else { const m = document.createElement("p"); m.textContent = "Nog niets vastgelegd."; box.append(m); }
+    if ((k.x || []).length) { box.append(dosKop("Documenten in het dossier")); const u = document.createElement("p"); u.className = "uitleg"; u.textContent = "Alleen de namen; de bestanden zelf staan bij de co\u00f6rdinator."; box.append(u); const l = document.createElement("p"); l.textContent = k.x.join(" \u00b7 "); box.append(l); }
+    if (k.u) { const u = document.createElement("p"); u.className = "uitleg"; u.textContent = "Bijgewerkt op " + k.u + "."; box.append(u); }
+  }
+  box.append(dosKop("Vragen? Bel de co\u00f6rdinator")); box.append(dosRegel(COORD_NAAM, COORD_TEL, true));
+  toon("dossier"); window.scrollTo(0, 0);
+}
+$("dosTerug").onclick = () => { lijst(dosG); };
+let dosG = null;
 function formLink(vw, dn) { return FORM + "&" + VRAAG_VW + "=" + encodeURIComponent(vw) + "&" + VRAAG_DN + "=" + encodeURIComponent(dn); }
 
 // knop voor een deelnemer; bij nog niet binnen toestemming eerst het opnamescherm (daar staat ook de knop Terugkoppeling deelnemer)
@@ -283,8 +345,10 @@ function lijst(g) {
     box.append(deelnemerKnop(g, dn, true));
     const doorgegeven = lees("tk_afm:" + dn);
     if (doorgegeven) { const s = document.createElement("span"); s.className = "afstand"; s.textContent = "Afmelding klaargezet op " + afNl(doorgegeven); box.append(s); }
+    const kn = document.createElement("div"); kn.className = "knopen";
+    if (g.k && g.k[dn]) { const dk = document.createElement("button"); dk.type = "button"; dk.className = "klein dos"; dk.textContent = "Dossier"; dk.onclick = () => { dosG = g; toonDossier(g, dn); }; kn.append(dk); }
     const b = document.createElement("button"); b.type = "button"; b.className = "klein"; b.textContent = "Afmelden";
-    b.onclick = () => afmeldDirect(g, dn); box.append(b);
+    b.onclick = () => afmeldDirect(g, dn); kn.append(b); box.append(kn);
   });
   // deelnemer die niet in het lijstje staat: voornaam of HV-nummer intikken; de app zoekt alleen onder bekende deelnemers
   // (eigen, nog niet gekoppelde en recent losgekoppelde) en toont het HV-nummer uit Excel. Nieuwe deelnemers worden hier niet ingevoerd.
